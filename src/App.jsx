@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import {
   Search, Plus, Download, BrainCircuit, Hash,
   ChevronDown, BookOpen, Layers, Library, Info, Image as ImageIcon, X,
-  Type, Sigma, Cloud, AlertCircle, Eye, EyeOff, Trash2
+  Type, Sigma, Cloud, AlertCircle, Eye, EyeOff, Trash2, ZoomIn, ZoomOut, Keyboard
 } from 'lucide-react';
 import { useDecksSync } from './hooks/useDecksSync';
 
@@ -87,6 +87,17 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [libsReady, setLibsReady] = useState(false);
   const [undoHistory, setUndoHistory] = useState(null);
+  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [revealedCardIds, setRevealedCardIds] = useState(new Set());
+  const [cardSize, setCardSize] = useState(3);
+
+  const GRID_CLASSES = {
+    1: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+    2: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+    3: 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3',
+    4: 'grid-cols-1 xl:grid-cols-2',
+    5: 'grid-cols-1',
+  };
 
   // Update active deck IDs and expanded sections when sections load
   useEffect(() => {
@@ -259,17 +270,94 @@ export default function App() {
     }
   };
 
-  // Listen for Ctrl+Z
+  // Listen for all keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (e.target.isContentEditable || e.target.tagName === 'INPUT') return;
+
+      // Undo (existing)
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
         undo();
       }
+
+      // Space → toggle reveal on selected card
+      if (e.key === ' ' && selectedCardId !== null) {
+        e.preventDefault();
+        setRevealedCardIds(prev => {
+          const next = new Set(prev);
+          next.has(selectedCardId) ? next.delete(selectedCardId) : next.add(selectedCardId);
+          return next;
+        });
+      }
+
+      // Cmd/Ctrl+N → add new card
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        if (selectedCardId !== null) {
+          const sel = allVisibleCards.find(c => `${c.deckId}-${c.id}` === selectedCardId);
+          if (sel) addCardToDeck(sel.sectionId, sel.deckId);
+        } else {
+          for (const section of sections) {
+            const deck = section.decks.find(d => activeDeckIds.includes(d.id));
+            if (deck) { addCardToDeck(section.id, deck.id); break; }
+          }
+        }
+      }
+
+      // + or = → bigger cards (fewer columns)
+      if ((e.key === '+' || e.key === '=') && !e.ctrlKey && !e.metaKey) {
+        setCardSize(p => Math.min(5, p + 1));
+      }
+
+      // - → smaller cards (more columns)
+      if (e.key === '-' && !e.ctrlKey && !e.metaKey) {
+        setCardSize(p => Math.max(1, p - 1));
+      }
+
+      // Escape → deselect
+      if (e.key === 'Escape') setSelectedCardId(null);
+
+      // Arrow keys → navigate between cards
+      if (['ArrowLeft', 'ArrowUp'].includes(e.key)) {
+        e.preventDefault();
+        if (allVisibleCards.length === 0) return;
+        if (selectedCardId === null) {
+          setSelectedCardId(`${allVisibleCards[0].deckId}-${allVisibleCards[0].id}`);
+        } else {
+          const currentIndex = allVisibleCards.findIndex(c => `${c.deckId}-${c.id}` === selectedCardId);
+          if (currentIndex > 0) {
+            const prev = allVisibleCards[currentIndex - 1];
+            setSelectedCardId(`${prev.deckId}-${prev.id}`);
+          } else if (currentIndex === 0) {
+            // Wrap to end
+            const last = allVisibleCards[allVisibleCards.length - 1];
+            setSelectedCardId(`${last.deckId}-${last.id}`);
+          }
+        }
+      }
+
+      if (['ArrowRight', 'ArrowDown'].includes(e.key)) {
+        e.preventDefault();
+        if (allVisibleCards.length === 0) return;
+        if (selectedCardId === null) {
+          setSelectedCardId(`${allVisibleCards[0].deckId}-${allVisibleCards[0].id}`);
+        } else {
+          const currentIndex = allVisibleCards.findIndex(c => `${c.deckId}-${c.id}` === selectedCardId);
+          if (currentIndex < allVisibleCards.length - 1) {
+            const next = allVisibleCards[currentIndex + 1];
+            setSelectedCardId(`${next.deckId}-${next.id}`);
+          } else if (currentIndex === allVisibleCards.length - 1) {
+            // Wrap to start
+            setSelectedCardId(`${allVisibleCards[0].deckId}-${allVisibleCards[0].id}`);
+          }
+        }
+      }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undoHistory]);
+  }, [undoHistory, selectedCardId, sections, activeDeckIds, allVisibleCards])
 
   const toggleSection = (sectionId) => {
     setExpandedSections(prev =>
@@ -405,6 +493,25 @@ export default function App() {
               Last sync: {lastSyncTime.toLocaleTimeString()}
             </div>
           )}
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={() => setCardSize(p => Math.max(1, p - 1))}
+              disabled={cardSize === 1}
+              className="p-2 text-slate-400 hover:text-indigo-600 disabled:opacity-30 transition-colors"
+              title="More cards (−)"
+            >
+              <ZoomOut size={16} />
+            </button>
+            <span className="text-[10px] font-bold text-slate-400 w-4 text-center tabular-nums">{cardSize}</span>
+            <button
+              onClick={() => setCardSize(p => Math.min(5, p + 1))}
+              disabled={cardSize === 5}
+              className="p-2 text-slate-400 hover:text-indigo-600 disabled:opacity-30 transition-colors"
+              title="Bigger cards (+)"
+            >
+              <ZoomIn size={16} />
+            </button>
+          </div>
           <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
             <Download size={18} />
           </button>
@@ -501,6 +608,22 @@ export default function App() {
                   <ImageIcon size={12} className="shrink-0 text-orange-400" />
                   <span>Paste images directly onto cards</span>
                 </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-violet-400" />
+                  <span>Space → Reveal selected card</span>
+                </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-violet-400" />
+                  <span>⌘N → New card in deck</span>
+                </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-violet-400" />
+                  <span>+/− → Resize card grid</span>
+                </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-violet-400" />
+                  <span>←/→ or ↑/↓ → Navigate cards</span>
+                </li>
               </ul>
             </div>
           </aside>
@@ -530,7 +653,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
+            <div className={`grid ${GRID_CLASSES[cardSize]} gap-6 pb-20`}>
               {allVisibleCards.map(card => (
                 <Flashcard
                   key={`${card.deckId}-${card.id}`}
@@ -540,6 +663,17 @@ export default function App() {
                   onAdd={() => addCardToDeck(card.sectionId, card.deckId)}
                   onDelete={() => deleteCard(card.sectionId, card.deckId, card.id)}
                   libsReady={libsReady}
+                  isSelected={selectedCardId === `${card.deckId}-${card.id}`}
+                  isRevealed={revealedCardIds.has(`${card.deckId}-${card.id}`)}
+                  onSelect={() => setSelectedCardId(`${card.deckId}-${card.id}`)}
+                  onToggleReveal={() => {
+                    const id = `${card.deckId}-${card.id}`;
+                    setRevealedCardIds(prev => {
+                      const next = new Set(prev);
+                      next.has(id) ? next.delete(id) : next.add(id);
+                      return next;
+                    });
+                  }}
                 />
               ))}
             </div>
@@ -550,9 +684,8 @@ export default function App() {
   );
 }
 
-function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady }) {
+function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady, isSelected, isRevealed, onSelect, onToggleReveal }) {
   const [isFocused, setIsFocused] = useState(null);
-  const [isBackRevealed, setIsBackRevealed] = useState(false);
 
   const handlePaste = (e, field) => {
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
@@ -583,7 +716,14 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady }) {
   );
 
   return (
-    <div className="group bg-white rounded-2xl border-2 transition-all duration-300 flex flex-col overflow-hidden shadow-sm border-slate-100 hover:border-indigo-200 hover:shadow-lg min-h-[260px]">
+    <div
+      onClick={(e) => { if (!e.target.isContentEditable) onSelect(); }}
+      className={`group bg-white rounded-2xl border-2 transition-all duration-300 flex flex-col overflow-hidden shadow-sm min-h-[260px]
+        ${isSelected
+          ? 'ring-2 ring-indigo-400 border-indigo-300 shadow-lg'
+          : 'border-slate-100 hover:border-indigo-200 hover:shadow-lg'
+        }`}
+    >
       {/* CARD HEADER */}
       <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-2 overflow-hidden flex-1">
@@ -644,17 +784,17 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady }) {
               <div className="flex items-center gap-2">
                 <label className="text-[8px] font-black text-slate-300 uppercase tracking-widest block">Answer</label>
                 <button
-                  onClick={() => setIsBackRevealed(!isBackRevealed)}
+                  onClick={() => onToggleReveal()}
                   className="p-0.5 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded transition-colors"
-                  title={isBackRevealed ? "Hide answer" : "Show answer"}
+                  title={isRevealed ? "Hide answer" : "Show answer"}
                 >
-                  {isBackRevealed ? <Eye size={14} /> : <EyeOff size={14} />}
+                  {isRevealed ? <Eye size={14} /> : <EyeOff size={14} />}
                 </button>
               </div>
               {isFocused === 'back' && <span className="text-[8px] font-bold text-emerald-400 bg-emerald-50 px-1 rounded animate-pulse uppercase">Editing</span>}
             </div>
 
-            {isBackRevealed && (
+            {isRevealed && (
               <div className="animate-in fade-in duration-200">
                 <SmartField
                   value={card.back}
