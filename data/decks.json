@@ -11,7 +11,7 @@
             "id": 101,
             "displayId": "BAS-01",
             "front": "What is **Reliability** in system design?",
-            "back": "The ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\n\n",
+            "back": "The ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling.",
             "category": "Basics",
             "frontImage": null,
             "backImage": null
@@ -52,6 +52,222 @@
             "front": "Analyze the time complexity of a **B-Tree** lookup.",
             "back": "For a B-tree with $n$ elements and branching factor $b$:\n- Depth is $O(\\log_b n)$\n- Lookup is $O(\\log_b n)$\n\n`Index seeks` are minimized due to the high $b$, making it very disk-efficient.",
             "category": "Engines",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "section-2",
+    "title": "Introduction to Computer Science with Java",
+    "decks": [
+      {
+        "id": "deck-4",
+        "title": "Chapter 1: Fundamentals of Programming and Variables",
+        "cards": [
+          {
+            "id": 1001,
+            "displayId": "VAR-01",
+            "front": "What are the **eight primitive types** in Java?",
+            "back": "The eight primitive types in Java are:\n1. **byte** - 8-bit signed integer\n2. **short** - 16-bit signed integer\n3. **int** - 32-bit signed integer\n4. **long** - 64-bit signed integer\n5. **float** - 32-bit floating-point\n6. **double** - 64-bit floating-point\n7. **boolean** - true or false\n8. **char** - 16-bit Unicode character\n\nThese store values directly in memory, unlike reference types which store object references.",
+            "category": "Primitive Types",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 1002,
+            "displayId": "VAR-02",
+            "front": "What is the difference between **variable declaration** and **variable initialization** in Java?",
+            "back": "**Declaration** introduces a variable with a specific type and name, reserving memory space. Example: `int age;`\n\n**Initialization** assigns an initial value to that variable. Example: `age = 25;`\n\nThese can be combined: `int age = 25;` declares and initializes in one statement. A variable must be declared before use, but initialization is optional for some types (though it's best practice to initialize).",
+            "category": "Variables",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 1003,
+            "displayId": "VAR-03",
+            "front": "What is **variable scope** in Java, and why is it important?",
+            "back": "Variable scope refers to the region of code where a variable can be accessed. In Java, the main scope types are:\n\n- **Local scope**: Variables declared inside a method are only accessible within that method\n- **Class/Instance scope**: Variables declared as class fields are accessible throughout the class\n- **Block scope**: Variables declared inside a block (if, for, while) are only accessible within that block\n\nScope is important because it prevents naming conflicts, improves code organization, and ensures variables are only used where appropriate. Improper scope can lead to bugs and unintended variable access.",
+            "category": "Variables",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 1004,
+            "displayId": "VAR-04",
+            "front": "What is the purpose of the **`final` keyword** when declaring a variable in Java?",
+            "back": "The `final` keyword declares a variable as a **constant**, meaning its value cannot be changed once initialized.\n\nExample: `final double PI = 3.14159;`\n\nKey points:\n- The variable must be initialized when declared or in the constructor\n- Attempting to reassign a final variable results in a compile-time error\n- By convention, final variables are named in ALL_UPPERCASE\n- Using `final` improves code safety, enables compiler optimizations, and makes intent clear\n- Often used for mathematical constants, configuration values, and immutable references",
+            "category": "Variables",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
+      },
+      {
+        "id": "deck-5",
+        "title": "Chapter 2: Control Flow and Functions",
+        "cards": [
+          {
+            "id": 2001,
+            "displayId": "CTL-01",
+            "front": "What is the purpose of an **if-else statement** in Java?",
+            "back": "An if-else statement allows a program to execute different code blocks based on whether a condition is true or false. The if block executes when the condition is true, and the else block (if present) executes when the condition is false. This enables conditional branching in program logic.",
+            "category": "ControlFlow",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 2002,
+            "displayId": "CTL-02",
+            "front": "Explain the difference between a **for loop** and a **while loop** in Java.",
+            "back": "A **for loop** is used when you know the number of iterations upfront. It has a definite structure: initialization, condition, and increment. A **while loop** continues executing as long as its condition remains true, making it ideal when the number of iterations is unknown or depends on dynamic conditions. For loops are generally preferred for counting iterations, while loops for event-driven repetition.",
+            "category": "ControlFlow",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 2003,
+            "displayId": "CTL-03",
+            "front": "What are the key components of a **method definition** in Java? Provide an example.",
+            "back": "A method definition consists of:\n- **Access modifier** (public, private)\n- **Return type** (void, int, String, etc.)\n- **Method name** (should be descriptive)\n- **Parameters** (optional, in parentheses)\n- **Method body** (enclosed in curly braces)\n\nExample:\n```java\npublic int calculateSum(int a, int b) {\n  return a + b;\n}\n```\nThis method is public, returns an int, takes two int parameters, and returns their sum.",
+            "category": "Functions",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 2004,
+            "displayId": "CTL-04",
+            "front": "Explain **parameter passing** in Java. What is the difference between passing primitive types and objects?",
+            "back": "Java uses **pass-by-value** for both primitive types and objects, but with different implications:\n\n**Primitive types** (int, double, boolean, etc.): The actual value is copied and passed to the method. Changes made inside the method do not affect the original variable.\n\n**Objects**: A copy of the reference (memory address) is passed, not the object itself. Changes to the object's properties inside the method affect the original object, but reassigning the parameter variable does not affect the original reference.\n\nExample:\n```java\nvoid changePrimitive(int x) { x = 10; } // doesn't affect caller's x\nvoid changeObject(MyClass obj) { obj.property = 5; } // affects caller's object\n```",
+            "category": "Functions",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
+      },
+      {
+        "id": "deck-6",
+        "title": "Chapter 3: Object-Oriented Programming",
+        "cards": [
+          {
+            "id": 3001,
+            "displayId": "OOP-01",
+            "front": "What is the difference between a **class** and an **object** in Java?",
+            "back": "A **class** is a blueprint or template that defines the structure and behavior of objects. An **object** is an instance of a class - a concrete realization created from that blueprint. Example: `String` is a class, while `\"Hello\"` is an object (instance) of the String class.",
+            "category": "OOP",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 3002,
+            "displayId": "OOP-02",
+            "front": "Explain **encapsulation** and how it is implemented in Java using access modifiers.",
+            "back": "**Encapsulation** is bundling data (fields) and methods together within a class while hiding internal details. It is implemented using access modifiers:\n- `private` - accessible only within the class\n- `public` - accessible from anywhere\n- `protected` - accessible within package and subclasses\n- package-private (default) - accessible within the package\n\nThis protects data from unauthorized access and modification.",
+            "category": "OOP",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 3003,
+            "displayId": "OOP-03",
+            "front": "What are **inheritance** and **method overriding**? Provide an example.",
+            "back": "**Inheritance** allows a subclass to inherit properties and methods from a superclass using the `extends` keyword.\n\n**Method overriding** occurs when a subclass provides its own implementation of a method defined in the superclass.\n\nExample:\n```java\nclass Animal {\n  void speak() { System.out.println(\"Some sound\"); }\n}\nclass Dog extends Animal {\n  @Override\n  void speak() { System.out.println(\"Woof!\"); }\n}\n```\nDog overrides the `speak()` method with its own implementation.",
+            "category": "OOP",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 3004,
+            "displayId": "OOP-04",
+            "front": "Define **polymorphism** and explain its two main types with examples.",
+            "back": "**Polymorphism** means \"many forms\" - the ability of objects to take multiple forms or methods to behave differently based on context.\n\n**Compile-time Polymorphism (Method Overloading):**\nMultiple methods with the same name but different parameters.\n```java\nvoid print(int x) { }\nvoid print(String x) { }\n```\n\n**Runtime Polymorphism (Method Overriding):**\nA subclass method overrides the superclass method. The actual method called depends on the object type at runtime.\n```java\nAnimal animal = new Dog();\nanimal.speak(); // Calls Dog's speak(), not Animal's\n```",
+            "category": "OOP",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
+      },
+      {
+        "id": "deck-7",
+        "title": "Chapter 4: Collections and Data Structures",
+        "cards": [
+          {
+            "id": 4001,
+            "displayId": "COL-01",
+            "front": "What is the time complexity of **ArrayList.get(index)**?",
+            "back": "$O(1)$ - constant time.\n\nArrayList stores elements in a contiguous array, so accessing by index is direct memory access, regardless of the list size.",
+            "category": "Collections",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 4002,
+            "displayId": "COL-02",
+            "front": "Compare the time complexity of **add()** for ArrayList vs LinkedList at the end.",
+            "back": "- **ArrayList**: $O(1)$ amortized time. Appending to the end is constant unless resizing is needed.\n- **LinkedList**: $O(1)$ constant time. Adding at the end only requires updating the tail pointer.\n\nBoth are efficient for end insertions, but ArrayList is generally faster in practice due to cache locality.",
+            "category": "Collections",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 4003,
+            "displayId": "COL-03",
+            "front": "What is the time complexity of **HashMap.get(key)** and **HashMap.put(key, value)**?",
+            "back": "Both average $O(1)$ - constant time.\n\nHashMap uses a hash function to directly locate the bucket containing the key-value pair. In the worst case (all collisions), performance degrades to $O(n)$, but this is rare with a good hash function and proper load factor management.",
+            "category": "Collections",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 4004,
+            "displayId": "COL-04",
+            "front": "What are the key differences between **Set** and **List**?",
+            "back": "| Property | Set | List |\n|----------|-----|------|\n| **Duplicates** | Not allowed | Allowed |\n| **Order** | No guaranteed order (unless TreeSet) | Maintains insertion order |\n| **Access** | No index-based access | Index-based access via get() |\n| **Common Implementations** | HashSet, TreeSet | ArrayList, LinkedList |\n\n**Set** is optimized for membership testing ($O(1)$ for HashSet), while **List** is optimized for sequential access and positional operations.",
+            "category": "Collections",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
+      },
+      {
+        "id": "deck-8",
+        "title": "Chapter 5: Exception Handling and I/O",
+        "cards": [
+          {
+            "id": 5001,
+            "displayId": "EXC-01",
+            "front": "What is the difference between **checked** and **unchecked** exceptions in Java?",
+            "back": "**Checked exceptions** (e.g., IOException, SQLException) must be caught or declared in the method signature using `throws`. They are checked at compile-time. **Unchecked exceptions** (e.g., NullPointerException, ArrayIndexOutOfBoundsException) are subclasses of RuntimeException and don't require explicit handling - they are checked at runtime.",
+            "category": "ExceptionHandling",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 5002,
+            "displayId": "EXC-02",
+            "front": "Explain the structure and purpose of a **try-catch-finally** block. What code goes in each section?",
+            "back": "- **try block**: Contains code that may throw an exception\n- **catch block(s)**: Handles specific exception types; executes only if the corresponding exception is thrown\n- **finally block**: Optional; executes regardless of whether an exception occurred, typically used for cleanup (closing files, releasing resources)\n\nExample:\n```java\ntry {\n  // risky code\n} catch (IOException e) {\n  // handle IO error\n} finally {\n  // cleanup code\n}\n```",
+            "category": "ExceptionHandling",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 5003,
+            "displayId": "EXC-03",
+            "front": "What is a **stream** in Java I/O, and what are the two main categories of streams?",
+            "back": "A **stream** is a sequence of data flowing from a source to a destination. The two main categories are:\n\n1. **Byte Streams**: Handle raw binary data (e.g., FileInputStream, FileOutputStream, InputStream, OutputStream). Suitable for images, audio, and binary files.\n2. **Character Streams**: Handle text data (e.g., FileReader, FileWriter, Reader, Writer). Suitable for text files. Character streams use Unicode encoding.\n\nCharacter streams are typically wrappers around byte streams with built-in encoding/decoding.",
+            "category": "FileIO",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 5004,
+            "displayId": "EXC-04",
+            "front": "What are the best practices for error handling and resource management in Java?",
+            "back": "**Best practices for error handling:**\n1. Catch specific exceptions rather than generic Exception\n2. Provide meaningful error messages for debugging\n3. Log exceptions appropriately\n4. Use try-with-resources for automatic resource cleanup:\n```java\ntry (FileReader fr = new FileReader(\"file.txt\")) {\n  // use fr\n} catch (IOException e) {\n  // handle error\n}\n```\n5. Clean up resources in finally blocks or use try-with-resources\n6. Don't suppress exceptions silently; handle or re-throw appropriately\n7. Distinguish between recoverable errors (catch and handle) and fatal errors (let propagate)\n8. Create custom exceptions for application-specific errors",
+            "category": "ErrorHandling",
             "frontImage": null,
             "backImage": null
           }
