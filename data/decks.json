@@ -1,0 +1,62 @@
+[
+  {
+    "id": "section-1",
+    "title": "Data Intensive Apps",
+    "decks": [
+      {
+        "id": "deck-1",
+        "title": "Data-Intensive Basics",
+        "cards": [
+          {
+            "id": 101,
+            "displayId": "BAS-01",
+            "front": "What is **Reliability** in system design?",
+            "back": "The ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\nThe ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling. \n\nPRUEBA AAVER SI SÍ SE GUARDA\n\n",
+            "category": "Basics",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 102,
+            "displayId": "BAS-02",
+            "front": "What does the **CAP Theorem** state for a system $S$?",
+            "back": "In a distributed system, you can only provide two out of three:\n1. **Consistency** ($C$)\n2. **Availability** ($A$)\n3. **Partition Tolerance** ($P$)\n\n$\\text{If } P \\text{ exists} \\implies (C \\lor A)$ \n\nThis forces a trade-off during a network partition.",
+            "category": "Consistency",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
+      },
+      {
+        "id": "deck-2",
+        "title": "Chapter 2: Data Models",
+        "cards": [
+          {
+            "id": 201,
+            "displayId": "MOD-01",
+            "front": "Explain **Impedance Mismatch**.",
+            "back": "The disconnect between the object-oriented model in application code and the relational model (tables/rows) in databases. \n\n$Objects \\neq Tables$\n\nOften requires an ORM layer.",
+            "category": "Concepts",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
+      },
+      {
+        "id": "deck-3",
+        "title": "Chapter 3: Storage Engines",
+        "cards": [
+          {
+            "id": 301,
+            "displayId": "STO-01",
+            "front": "Analyze the time complexity of a **B-Tree** lookup.",
+            "back": "For a B-tree with $n$ elements and branching factor $b$:\n- Depth is $O(\\log_b n)$\n- Lookup is $O(\\log_b n)$\n\n`Index seeks` are minimized due to the high $b$, making it very disk-efficient.",
+            "category": "Engines",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
+      }
+    ]
+  }
+]
