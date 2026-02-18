@@ -106,22 +106,34 @@ export default function App() {
       const { Marked } = globalThis.marked;
       const { markedHighlight } = globalThis.markedHighlight;
 
-      const renderer = {
-        code({ text, lang }) {
-          const language = lang || 'plaintext';
-          const safeLanguage = window.hljs.getLanguage(language) ? language : 'plaintext';
-          const highlighted = window.hljs.highlight(text, { language: safeLanguage }).value;
+      // Create marked instance with highlight support
+      window._markedInstance = new Marked();
+      window._markedInstance.use(
+        markedHighlight({
+          emptyLangClass: 'hljs',
+          langPrefix: 'hljs language-',
+          highlight(code, lang) {
+            const language = window.hljs.getLanguage(lang) ? lang : 'plaintext';
+            return window.hljs.highlight(code, { language }).value;
+          }
+        })
+      );
 
-          const hasOk    = /\/\/[^\S\n]*✅/.test(text);
-          const hasError = /\/\/[^\S\n]*❌/.test(text);
+      // Store the diff detection function globally
+      window._processDiffVisualization = (html) => {
+        // Find all code blocks and wrap them with diff visualization
+        return html.replace(/<pre><code class="hljs language-([^"]*)">([\s\S]*?)<\/code><\/pre>/g, (match, lang, code) => {
+          const displayLang = lang && lang !== 'plaintext' ? lang : '';
+          const decodedCode = new DOMParser().parseFromString('<!doctype html><body>' + code, 'text/html').body.textContent;
+
+          const hasOk    = /\/\/[^\S\n]*✅/.test(decodedCode);
+          const hasError = /\/\/[^\S\n]*❌/.test(decodedCode);
           let borderClass = '';
           if (hasOk && !hasError)      borderClass = ' code-diff-ok';
           else if (hasError && !hasOk) borderClass = ' code-diff-error';
           else if (hasOk && hasError)  borderClass = ' code-diff-mixed';
 
-          const displayLang = (lang && lang !== 'plaintext') ? lang : '';
-          return `
-<div class="code-block-wrapper${borderClass}">
+          return `<div class="code-block-wrapper${borderClass}">
   <div class="code-block-header">
     ${displayLang ? `<span class="code-lang-badge">${displayLang}</span>` : '<span></span>'}
     <button class="code-copy-btn" onclick="(function(btn){
@@ -135,22 +147,10 @@ export default function App() {
       }
     })(this)">Copy</button>
   </div>
-  <pre><code class="hljs language-${safeLanguage}">${highlighted}</code></pre>
+  <pre><code class="hljs language-${lang}">${code}</code></pre>
 </div>`;
-        }
+        });
       };
-
-      window._markedInstance = new Marked(
-        markedHighlight({
-          emptyLangClass: 'hljs',
-          langPrefix: 'hljs language-',
-          highlight(code, lang) {
-            const language = window.hljs.getLanguage(lang) ? lang : 'plaintext';
-            return window.hljs.highlight(code, { language }).value;
-          }
-        }),
-        { renderer }
-      );
 
       setLibsReady(true);
     };
@@ -667,7 +667,14 @@ function SmartField({ value, isEditing, libsReady, onFocus, onBlur, onPaste, cla
       });
     }
     if (libsReady && window._markedInstance) {
-      try { return window._markedInstance.parse(text); }
+      try {
+        let html = window._markedInstance.parse(text);
+        // Apply diff visualization post-processing
+        if (window._processDiffVisualization) {
+          html = window._processDiffVisualization(html);
+        }
+        return html;
+      }
       catch (e) { return text.replace(/\n/g, '<br/>'); }
     }
     return text.replace(/\n/g, '<br/>');
