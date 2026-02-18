@@ -575,6 +575,120 @@
             "backImage": null
           }
         ]
+      },
+      {
+        "id": "deck-12",
+        "title": "Chapter 4: Git Worktree",
+        "cards": [
+          {
+            "id": 6031,
+            "displayId": "WT-01",
+            "front": "What is a **git worktree** and what problem does it solve?",
+            "back": "A **git worktree** enables multiple working trees from a single repository, allowing you to work on different branches simultaneously without the friction of stashing and switching.\n\n**The Problem**:\nTraditional stash workflow requires context switching:\n```bash\n# Old approach - context gets lost\ngit stash               # ❌ Lose your working context\ngit checkout bugfix\n# ... work on bugfix ...\ngit checkout feature\ngit stash pop           # ❌ May have conflicts\n```\n\n**The Solution**:\nWorktree approach preserves context:\n```bash\n# New approach - context preserved\ngit worktree add ../bugfix bugfix\n# ... work on bugfix in separate directory ...\ncd ../feature           # ✅ Context still intact\n# Continue your work\n```\n\n**Key Benefits**:\n- Parallel work on multiple branches\n- No context loss or stashing needed\n- Shared object database (efficient disk usage)\n- Isolated working environments",
+            "category": "Fundamentals",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6032,
+            "displayId": "WT-02",
+            "front": "How do **git worktrees** compare to **separate clones** in terms of resource usage?",
+            "back": "**Git Worktrees** vs **Separate Clones**:\n\n| Aspect | Worktree | Clone |\n|--------|----------|-------|\n| **Disk Space** | Minimal (~MB) | Full duplicate (~100s MB+) |\n| **Setup Time** | Seconds | Minutes |\n| **Object Database** | Shared (.git) | Independent |\n| **Remote Tracking** | Shared refs | Independent |\n| **Use Case** | Short to medium-term | Long-term fork |\n\n**Disk Space Example**:\n```bash\n# Repository size: 500MB\n\n# Approach 1: Separate Clones\ngit clone repo repo1        # 500MB\ngit clone repo repo2        # 500MB\ngit clone repo repo3        # 500MB\n# Total: 1.5GB\n\n# Approach 2: Worktrees (✅ Much smaller)\ngit worktree add ../wt1 branch1   # ~5MB extra\ngit worktree add ../wt2 branch2   # ~5MB extra\ngit worktree add ../wt3 branch3   # ~5MB extra\n# Total: 515MB\n```\n\n**Why Worktrees Are Better**:\n- ✅ Share one `.git` object database\n- ✅ Only per-worktree files (HEAD, index, logs)\n- ✅ Fast to create and remove\n- ✅ Efficient for team workflows",
+            "category": "Comparison",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6033,
+            "displayId": "WT-03",
+            "front": "Explain **main worktree** vs **linked worktree** architecture.",
+            "back": "**Main Worktree** (created by `git init` or `git clone`):\n- Contains the actual `.git/` directory\n- Stores all Git metadata and objects\n- Central reference point for all linked worktrees\n- Cannot be deleted while linked worktrees exist\n\n**Linked Worktree** (created by `git worktree add`):\n- References the main worktree via a `.git` file (not a directory)\n- Shares object database and refs from main\n- Has per-worktree files (HEAD, index, logs)\n- Can be deleted independently\n\n**Directory Structure**:\n```bash\nrepository/                 # Main worktree\n├── .git/                   # ✅ Real directory with all Git data\n│   ├── objects/\n│   ├── refs/\n│   └── worktrees/          # Admin files for linked worktrees\n│       ├── hotfix/\n│       └── feature/\n├── src/\n└── README.md\n\nworktrees/                  # Separate directory for linked worktrees\n├── hotfix/                 # Linked worktree 1\n│   └── .git               # ❌ FILE (not directory) pointing to main\n│   ├── src/\n│   └── README.md\n└── feature/               # Linked worktree 2\n    └── .git              # ❌ FILE (not directory) pointing to main\n    ├── src/\n    └── README.md\n```\n\n**Key Point**: All worktrees share the same `.git/objects/` to save disk space, but each has its own working context.",
+            "category": "Architecture",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6034,
+            "displayId": "WT-04",
+            "front": "What is the **one branch per worktree** constraint and why does it exist?",
+            "back": "**The Constraint**:\nBy default, Git prevents checking out the same branch in multiple worktrees simultaneously.\n\n**Error You Get**:\n```bash\ncd repository\ngit worktree add ../feature main\n# Error: fatal: 'main' is already checked out at '[path]'\n```\n\n**Why This Constraint Exists**:\nThe same branch can only be checked out in one place to prevent:\n- Concurrent file modifications (data loss)\n- Index conflicts\n- HEAD confusion\n\n**Valid Approaches**:\n\n✅ **Create new branch for worktree**:\n```bash\ngit worktree add -b new-feature ../feature\n# Creates new-feature branch and checks it out\n```\n\n✅ **Use different existing branch**:\n```bash\ngit worktree add ../hotfix hotfix-branch\n# hotfix-branch is not checked out elsewhere\n```\n\n✅ **Use detached HEAD**:\n```bash\ngit worktree add -d ../testing abc1234\n# Detached at specific commit, no branch conflict\n```\n\n❌ **Force override (risky)**:\n```bash\ngit worktree add --force ../duplicate main\n# Not recommended - risk of data loss!\n```\n\n**Best Practice**: Always create new branches or use different branches for each worktree to avoid this constraint.",
+            "category": "Constraints",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6035,
+            "displayId": "WT-05",
+            "front": "What are the **three essential git worktree commands** for basic usage?",
+            "back": "**1. git worktree add** - Create a new worktree:\n```bash\n# Syntax\ngit worktree add <path> [<branch>]\n\n# Example: Add worktree for existing branch\ngit worktree add ../bugfix bugfix-123\n\n# Example: Create new branch and worktree\ngit worktree add -b feature/payment ../payment\n\n# Example: Detached HEAD at commit\ngit worktree add -d ../testing abc1234\n\n# Example: Lock immediately (prevent pruning)\ngit worktree add --lock ../temporary ../temporary\n```\n\n**2. git worktree list** - View all worktrees:\n```bash\n# Basic listing\ngit worktree list\n# Output:\n# /path/to/main (main)\n# /path/to/worktrees/hotfix (hotfix) locked\n\n# Verbose details\ngit worktree list -v\n\n# Machine-readable format\ngit worktree list --porcelain\n```\n\n**3. git worktree remove** - Delete a worktree:\n```bash\n# Normal removal (requires clean working directory)\ngit worktree remove ../hotfix\n\n# Force removal with uncommitted changes ✅ Safe\ngit worktree remove -f ../hotfix\n\n# Prune stale metadata after manual deletion ✅ Cleanup\ngit worktree prune\n```\n\n**Typical Workflow**:\n```bash\ngit worktree add -b feature/auth ../auth  # ✅ Create\ngit worktree list                         # ✅ Check\ncd ../auth && git commit ...              # Work\ngit worktree remove ../auth               # ✅ Cleanup\n```",
+            "category": "Commands",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6036,
+            "displayId": "WT-06",
+            "front": "What are the **advanced worktree management commands**?",
+            "back": "**git worktree lock** - Prevent automatic deletion:\n```bash\n# Prevent pruning (e.g., worktree on external drive)\ngit worktree lock ../external-drive-wt\n\n# Lock with reason annotation\ngit worktree lock --reason \"Portable external SSD\" ../external-wt\n\n# Check lock status\ngit worktree list -v  # Shows (locked) status\n```\n\n**git worktree unlock** - Allow operations:\n```bash\n# Re-enable pruning and removal\ngit worktree unlock ../external-drive-wt\n\n# Now can remove without lock\ngit worktree remove ../external-drive-wt\n```\n\n**git worktree prune** - Clean stale metadata:\n```bash\n# Remove metadata for missing worktrees\ngit worktree prune\n\n# Preview what would be removed\ngit worktree prune --dry-run\n\n# Only remove older than 2 weeks\ngit worktree prune --expire 2.weeks\n```\n\n**git worktree repair** - Fix broken connections:\n```bash\n# Repair all worktrees\ngit worktree repair\n\n# Repair specific worktree\ngit worktree repair /path/to/worktree\n\n# Example: After manually moving directory\nmv /users/dev/worktree /users/dev/work/worktree\ngit worktree repair  # ✅ Fixes broken references\n```\n\n**When to Use Each**:\n- **lock**: Worktree on removable/external media\n- **unlock**: Before removing locked worktree\n- **prune**: After manual directory deletion\n- **repair**: After moving directories or restoring from backup",
+            "category": "Management",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6037,
+            "displayId": "WT-07",
+            "front": "What are **best practices for organizing worktrees**?",
+            "back": "**Organization Strategy**:\nUse a dedicated directory for all worktrees and match directory names to branch names.\n\n**✅ Recommended Structure**:\n```bash\nrepository/\n├── .git/\n├── src/\n├── README.md\n└── worktrees/                  # Dedicated worktrees directory\n    ├── feature-auth/           # Feature development\n    ├── hotfix-critical/        # Emergency fixes\n    ├── review-pr-123/          # PR reviews\n    └── experimental/           # Experimental features\n```\n\n**Setup Commands**:\n```bash\n# Create organized worktrees\ngit worktree add -b feature/authentication ./worktrees/feature-auth\ngit worktree add -b hotfix/security ./worktrees/hotfix-critical\ngit worktree add -d ./worktrees/review                # Detached for testing\n```\n\n**Naming Conventions**:\n```bash\n# ✅ Clear naming\ngit worktree add ./worktrees/feature-payment -b feature/payment-system\ngit worktree add ./worktrees/fix-docker -b bugfix/docker-build\ngit worktree add ./worktrees/review-team-pr ./worktrees/review-team-pr\n\n# ❌ Confusing naming\ngit worktree add ./w1 feature/payment-system\ngit worktree add ./tmp bugfix/docker-build\ngit worktree add ./t3 ./worktrees/review-team-pr\n```\n\n**Cleanup Strategy**:\n```bash\n# View all active worktrees\ngit worktree list\n\n# Remove completed worktrees\ngit worktree remove ./worktrees/feature-auth\n\n# Periodically clean stale metadata\ngit worktree prune --dry-run\ngit worktree prune\n```\n\n**Why This Matters**:\n- ✅ Easy to understand project structure\n- ✅ Prevents scattered directories\n- ✅ Helps team members find worktrees\n- ✅ Simple cleanup process",
+            "category": "Best Practices",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6038,
+            "displayId": "WT-08",
+            "front": "How do you implement a **feature development + code review workflow** with worktrees?",
+            "back": "**Setup: Create Permanent Worktrees**\n\n```bash\n# Create three dedicated worktrees\ngit worktree add ./worktrees/main main          # Reference read-only copy\ngit worktree add ./worktrees/dev -b develop    # Main development branch\ngit worktree add ./worktrees/review develop    # Code review environment\n```\n\n**Workflow: Feature Development**\n\n```bash\n# Step 1: Work on feature in dev worktree\ncd ./worktrees/dev\ngit checkout -b feature/payment-system\n# ... make changes, commit, run tests ...\ngit commit -m \"Add payment processing\"\n\n# Step 2: Push feature to GitHub\ngit push origin feature/payment-system\n# Create pull request\n```\n\n**Workflow: Code Review (without interrupting development)**\n\n```bash\n# Step 1: PR arrives - fetch without leaving dev worktree\ncd ./worktrees/review\ngit fetch origin pull/123/head:review-pr-123\ngit checkout review-pr-123\n\n# Step 2: Test the PR\nnpm install && npm test\n# Leave feedback on GitHub\n\n# Step 3: Return to feature work\ncd ../dev\n# ✅ Your feature context is still intact!\n```\n\n**Workflow: Production Bug Fix**\n\n```bash\n# Emergency hotfix without interrupting feature work\ngit worktree add ./worktrees/hotfix main\n\ncd ./worktrees/hotfix\ngit checkout -b hotfix/critical-security-issue\n# ... fix and test ...\ngit commit -m \"Fix security issue\"\ngit push origin hotfix/critical-security-issue\n\n# Return to feature\ncd ../dev\n# ✅ Still on feature/payment-system with all changes intact\n```\n\n**Benefits**:\n- ✅ No context switching with stash\n- ✅ Multiple tasks in parallel\n- ✅ Clean separation of concerns\n- ✅ Better focus and productivity",
+            "category": "Workflows",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6039,
+            "displayId": "WT-09",
+            "front": "What are **common worktree pitfalls** and how do you avoid them?",
+            "back": "**Pitfall 1: Branch Already Checked Out**\n\nProblem:\n```bash\ngit worktree add ../feature main\n# ❌ Error: 'main' is already checked out at '[path]'\n```\n\nSolution:\n```bash\n# ✅ Create new branch\ngit worktree add -b feature/new-feature ../feature\n\n# ✅ Or use different branch\ngit worktree add ../hotfix hotfix-branch\n\n# ✅ Or check what's checked out first\ngit worktree list  # See which branches are in use\n```\n\n**Pitfall 2: Manual Directory Deletion**\n\nProblem:\n```bash\nrm -rf ./worktrees/feature-old/\ngit worktree list\n# ❌ Still shows the deleted worktree!\n```\n\nSolution:\n```bash\n# ✅ Always use git command\ngit worktree remove ./worktrees/feature-old\n\n# ✅ If already manually deleted, cleanup metadata\ngit worktree prune\n```\n\n**Pitfall 3: Locked Worktree Issues**\n\nProblem:\n```bash\ngit worktree lock ../external-drive-wt\nrm -rf ../external-drive-wt\n# ❌ Cannot remove - still locked\n```\n\nSolution:\n```bash\n# ✅ Unlock before removing\ngit worktree unlock ../external-drive-wt\ngit worktree remove ../external-drive-wt\n```\n\n**Pitfall 4: Forgetting to Check Current Location**\n\nProblem:\n```bash\n# You think you're in feature worktree\ngit checkout main\n# ❌ Actually modified main branch in dev worktree!\n```\n\nSolution:\n```bash\n# ✅ Always check your location\npwd                  # See directory\nls .git              # FILE = linked worktree, DIR = main\ngit worktree list   # See what's checked out where\n```\n\n**Prevention Checklist**:\n- ✅ Always use `git worktree add` for creation\n- ✅ Always use `git worktree remove` for deletion\n- ✅ Check `git worktree list` before adding\n- ✅ Unlock worktrees before removing\n- ✅ Clean stale metadata with `git worktree prune`",
+            "category": "Pitfalls",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6040,
+            "displayId": "WT-10",
+            "front": "What are **detached HEAD worktrees** and when would you use them?",
+            "back": "**Detached HEAD Worktree**:\nA worktree checked out at a specific commit instead of a branch.\n\n**Create Detached HEAD Worktree**:\n```bash\n# At specific commit\ngit worktree add -d ../testing abc1234\n\n# At tag\ngit worktree add -d ../test-v1.0 v1.0\n\n# At branch (but detached, not tracking)\ngit worktree add -d ../parallel-test main\n```\n\n**Use Case 1: Parallel Testing on Same Commit**\n\n```bash\n# Development: Feature work on main branch\ngit worktree add -b feature/api ../dev\ncd ../dev\n# ... work on feature ...\n\n# Meanwhile: Fuzz testing on specific main commit\ngit worktree add -d ../fuzz-test main\ncd ../fuzz-test\n# Run long-running fuzz tests\n\n# Result: ✅ Both run simultaneously without conflict\n```\n\n**Use Case 2: Version-Specific Testing**\n\n```bash\n# Test current code against multiple versions\ngit worktree add -d ../test-v1.0 v1.0\ngit worktree add -d ../test-v1.1 v1.1\ngit worktree add -d ../test-v2.0 v2.0\n\n# Run compatibility tests on each version independently\n```\n\n**Use Case 3: Bisect Debugging**\n\n```bash\n# Find which commit introduced a bug\ngit worktree add -d ../bisect HEAD  # Start point\ncd ../bisect\ngit bisect start\n# Test different commits without losing main context\n```\n\n**Advantages Over Branches**:\n- ✅ No branch constraints (same branch in multiple worktrees)\n- ✅ Temporary point-in-time environment\n- ✅ Clean for exploratory testing\n- ✅ No risk of branch modifications\n\n**Disadvantages**:\n- ❌ Cannot commit (detached HEAD)\n- ❌ Must checkout branch if changes needed\n- ❌ More temporary than permanent worktrees",
+            "category": "Advanced",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6041,
+            "displayId": "WT-11",
+            "front": "How do you **move a worktree** and **repair broken connections**?",
+            "back": "**git worktree move** - Relocate Worktree Directory\n\n```bash\n# Move worktree to new location\ngit worktree move <old-path> <new-path>\n\n# Example: Organize to subdirectory\ngit worktree move ../my-feature ./worktrees/my-feature\n\n# Limitations:\n# - Cannot move main worktree\n# - Worktrees with submodules need repair\n```\n\n**git worktree repair** - Fix Broken Connections\n\n```bash\n# Repair all broken worktree connections\ngit worktree repair\n\n# Repair specific worktree\ngit worktree repair /path/to/worktree\n\n# Check what would be repaired\ngit worktree list --porcelain\n```\n\n**Scenario: After Moving Directory Manually**\n\n```bash\n# Original location\n/Users/dev/project/\n├── .git/\n└── worktrees/\n    └── feature/\n\n# You move entire project\nmv /Users/dev/project /Users/dev/work/project\n\n# Now git worktree commands fail\ncd /Users/dev/work/project\ngit worktree list\n# ❌ Error: Cannot read admin files\n\n# Solution: Repair connections\ngit worktree repair\n# ✅ All worktrees functional again\n```\n\n**Scenario: After Copying to External Drive**\n\n```bash\n# Copy project to external SSD\ncp -r project/ /Volumes/SSD/project/\ncd /Volumes/SSD/project\ngit worktree list\n# ❌ Broken references\n\n# Repair\ngit worktree repair\n# ✅ Works with worktrees on external drive\n\n# Lock to prevent automatic pruning\ngit worktree lock ./worktrees/feature\n```\n\n**When You Need Move/Repair**:\n- ✅ Reorganizing directory structure\n- ✅ Moving to external/portable drive\n- ✅ Copying project for backup\n- ✅ Restoring from version control\n\n**Prevention**:\n```bash\n# Use git command instead of manual mv\ngit worktree move ../feature ./worktrees/feature  # ✅ Safe\n\n# NOT this:\nmv ../feature ./worktrees/feature                # ❌ Breaks refs\n```",
+            "category": "Maintenance",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6042,
+            "displayId": "WT-12",
+            "front": "**Complete Git Worktree Workflow**: Team Collaboration Scenario",
+            "back": "**Scenario**: Developer working on feature while teammates submit PRs\n\n**Setup Phase**:\n```bash\n# Clone and create organized worktree structure\ngit clone https://github.com/company/app.git\ncd app\n\n# Create permanent worktrees\ngit worktree add ./worktrees/main main\ngit worktree add -b develop ./worktrees/develop\ngit worktree add ./worktrees/review main    # For PR reviews\ngit worktree add ./worktrees/hotfix main    # For urgent fixes\n\nls -la ./worktrees/\n# feature-auth/\n# develop/\n# review/\n# hotfix/\n```\n\n**Development Phase**:\n```bash\ncd ./worktrees/develop\ngit checkout -b feature/payment-integration\n\n# Make changes\necho \"payment code\" >> src/payment.js\ngit add .\ngit commit -m \"Add Stripe integration\"\n\n# Push and create PR\ngit push origin feature/payment-integration\n```\n\n**PR Review Phase (without interrupting development)**:\n```bash\n# Teammate submits PR #42\ncd ./worktrees/review\n\n# Fetch the PR\ngit fetch origin pull/42/head:review-pr-42\ngit checkout review-pr-42\n\n# Test the PR\nnpm install && npm test\n# ✅ All tests pass, approve PR\n\n# Return to development\ncd ../develop\n# ✅ Your feature changes are still here!\ngit status\n# On branch feature/payment-integration\n# Your changes: still present\n```\n\n**Emergency Hotfix Phase**:\n```bash\n# Production bug discovered!\ncd ./worktrees/hotfix\ngit checkout -b hotfix/payment-crash main\n\n# Quick fix\necho \"fix\" >> src/payment.js\ngit commit -am \"Fix payment crash\"\ngit push origin hotfix/payment-crash\n\n# Create PR for immediate merge\n\n# Return to feature work\ncd ../develop\n# ✅ Still on feature/payment-integration\n# ✅ All your changes intact\n```\n\n**Complete Cleanup**:\n```bash\n# When feature is merged\ncd ./worktrees/main\ngit pull origin main\n\n# Remove completed worktrees\ngit worktree remove ./worktrees/develop\ngit worktree remove ./worktrees/hotfix\n\n# Keep review worktree for next PR\n\n# Cleanup stale metadata\ngit worktree prune\n```\n\n**Benefits Demonstrated**:\n- ✅ No context loss between tasks\n- ✅ Parallel work on features, reviews, hotfixes\n- ✅ Easy context switching (just `cd`)\n- ✅ Clean separation of concerns\n- ✅ Professional workflow that scales",
+            "category": "Real-world Workflows",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
       }
     ]
   }
