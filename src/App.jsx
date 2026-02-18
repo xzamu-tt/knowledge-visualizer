@@ -94,37 +94,131 @@ export default function App() {
     setExpandedSections(sections.map(s => s.id));
   }, [sections]);
 
-  // Load External Libraries for Markdown (Marked) and LaTeX (KaTeX)
+  // Load External Libraries for Syntax Highlighting (Highlight.js), Markdown (Marked), and LaTeX (KaTeX)
   useEffect(() => {
-    let loaded = { marked: false, katex: false };
+    let loaded = { hljs: false, marked: false, markedHighlight: false, katex: false };
+    let markedHighlightScript = null;
 
     const checkReady = () => {
-      if (loaded.marked && loaded.katex && window.marked && window.katex) {
-        setLibsReady(true);
+      if (!loaded.hljs || !loaded.marked || !loaded.markedHighlight || !loaded.katex) return;
+      if (!window.hljs || !globalThis.marked?.Marked || !globalThis.markedHighlight || !window.katex) return;
+
+      const { Marked } = globalThis.marked;
+      const { markedHighlight } = globalThis.markedHighlight;
+
+      const renderer = {
+        code({ text, lang }) {
+          const language = lang || 'plaintext';
+          const safeLanguage = window.hljs.getLanguage(language) ? language : 'plaintext';
+          const highlighted = window.hljs.highlight(text, { language: safeLanguage }).value;
+
+          const hasOk    = /\/\/[^\S\n]*✅/.test(text);
+          const hasError = /\/\/[^\S\n]*❌/.test(text);
+          let borderClass = '';
+          if (hasOk && !hasError)      borderClass = ' code-diff-ok';
+          else if (hasError && !hasOk) borderClass = ' code-diff-error';
+          else if (hasOk && hasError)  borderClass = ' code-diff-mixed';
+
+          const displayLang = (lang && lang !== 'plaintext') ? lang : '';
+          return `
+<div class="code-block-wrapper${borderClass}">
+  <div class="code-block-header">
+    ${displayLang ? `<span class="code-lang-badge">${displayLang}</span>` : '<span></span>'}
+    <button class="code-copy-btn" onclick="(function(btn){
+      var codeEl = btn.closest('.code-block-wrapper').querySelector('code');
+      if (codeEl && navigator.clipboard) {
+        navigator.clipboard.writeText(codeEl.innerText).then(function(){
+          var orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(function(){ btn.textContent = orig; }, 1500);
+        });
       }
+    })(this)">Copy</button>
+  </div>
+  <pre><code class="hljs language-${safeLanguage}">${highlighted}</code></pre>
+</div>`;
+        }
+      };
+
+      window._markedInstance = new Marked(
+        markedHighlight({
+          emptyLangClass: 'hljs',
+          langPrefix: 'hljs language-',
+          highlight(code, lang) {
+            const language = window.hljs.getLanguage(lang) ? lang : 'plaintext';
+            return window.hljs.highlight(code, { language }).value;
+          }
+        }),
+        { renderer }
+      );
+
+      setLibsReady(true);
     };
 
-    const markedScript = document.createElement('script');
-    markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
-    markedScript.async = true;
-    markedScript.onload = () => { loaded.marked = true; checkReady(); };
-    document.head.appendChild(markedScript);
+    // Inject code block styles once
+    if (!document.getElementById('kv-code-styles')) {
+      const style = document.createElement('style');
+      style.id = 'kv-code-styles';
+      style.textContent = `
+        .code-block-wrapper { border-radius:8px; overflow:hidden; margin:0.75em 0; border:1px solid #e2e8f0; font-size:0.8rem; }
+        .code-block-wrapper.code-diff-ok    { border-left:4px solid #22c55e; }
+        .code-block-wrapper.code-diff-error { border-left:4px solid #ef4444; }
+        .code-block-wrapper.code-diff-mixed { border-left:4px solid #f59e0b; }
+        .code-block-header { display:flex; justify-content:space-between; align-items:center; padding:4px 10px; background:#f6f8fa; border-bottom:1px solid #e2e8f0; }
+        .code-lang-badge { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#64748b; }
+        .code-copy-btn { font-size:0.65rem; font-weight:600; color:#64748b; background:transparent; border:1px solid #cbd5e1; border-radius:4px; padding:1px 7px; cursor:pointer; }
+        .code-copy-btn:hover { background:#e2e8f0; color:#334155; }
+        .code-block-wrapper pre { margin:0; padding:0.75em 1em; background:#fff; overflow-x:auto; }
+        .code-block-wrapper pre code.hljs { padding:0; background:transparent; font-size:0.8rem; line-height:1.55; }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // CSS (no dependency, load immediately)
+    const hljsCSS = document.createElement('link');
+    hljsCSS.rel = 'stylesheet';
+    hljsCSS.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css';
+    document.head.appendChild(hljsCSS);
 
     const katexCSS = document.createElement('link');
     katexCSS.rel = 'stylesheet';
     katexCSS.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css';
     document.head.appendChild(katexCSS);
 
+    // hljs JS (independent)
+    const hljsScript = document.createElement('script');
+    hljsScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js';
+    hljsScript.async = true;
+    hljsScript.onload = () => { loaded.hljs = true; checkReady(); };
+    document.head.appendChild(hljsScript);
+
+    // KaTeX JS (independent)
     const katexScript = document.createElement('script');
     katexScript.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js';
     katexScript.async = true;
     katexScript.onload = () => { loaded.katex = true; checkReady(); };
     document.head.appendChild(katexScript);
 
+    // marked UMD → then chain marked-highlight
+    const markedScript = document.createElement('script');
+    markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js';
+    markedScript.async = true;
+    markedScript.onload = () => {
+      loaded.marked = true;
+      markedHighlightScript = document.createElement('script');
+      markedHighlightScript.src = 'https://cdn.jsdelivr.net/npm/marked-highlight/lib/index.umd.js';
+      markedHighlightScript.async = true;
+      markedHighlightScript.onload = () => { loaded.markedHighlight = true; checkReady(); };
+      document.head.appendChild(markedHighlightScript);
+    };
+    document.head.appendChild(markedScript);
+
     return () => {
-      [markedScript, katexCSS, katexScript].forEach(el => {
-        if (document.head.contains(el)) document.head.removeChild(el);
-      });
+      [hljsCSS, katexCSS, hljsScript, markedScript, markedHighlightScript, katexScript]
+        .filter(Boolean)
+        .forEach(el => { if (document.head.contains(el)) document.head.removeChild(el); });
+      const s = document.getElementById('kv-code-styles');
+      if (s) document.head.removeChild(s);
     };
   }, []);
 
@@ -559,6 +653,26 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady }) {
 function SmartField({ value, isEditing, libsReady, onFocus, onBlur, onPaste, className }) {
   const editRef = useRef(null);
 
+  // Memoized rendered content (must come before conditional return)
+  const renderedContent = useMemo(() => {
+    let text = value || '';
+    if (libsReady && window.katex) {
+      text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => {
+        try { return window.katex.renderToString(math.trim(), { displayMode: true, throwOnError: false }); }
+        catch (e) { return `$$${math}$$`; }
+      });
+      text = text.replace(/\$([^\$\n]+?)\$/g, (_, math) => {
+        try { return window.katex.renderToString(math.trim(), { displayMode: false, throwOnError: false }); }
+        catch (e) { return `$${math}$`; }
+      });
+    }
+    if (libsReady && window._markedInstance) {
+      try { return window._markedInstance.parse(text); }
+      catch (e) { return text.replace(/\n/g, '<br/>'); }
+    }
+    return text.replace(/\n/g, '<br/>');
+  }, [value, libsReady]);
+
   // Reliable auto-focus when entering edit mode
   useEffect(() => {
     if (isEditing && editRef.current) {
@@ -589,46 +703,11 @@ function SmartField({ value, isEditing, libsReady, onFocus, onBlur, onPaste, cla
     );
   }
 
-  const getRenderedContent = () => {
-    let text = value || '';
-
-    // Step 1: Render LaTeX math with KaTeX before Markdown
-    if (libsReady && window.katex) {
-      // Display math first: $$...$$
-      text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => {
-        try {
-          return window.katex.renderToString(math.trim(), { displayMode: true, throwOnError: false });
-        } catch (e) {
-          return `$$${math}$$`;
-        }
-      });
-
-      // Inline math: $...$  (careful not to match already-processed $$)
-      text = text.replace(/\$([^\$\n]+?)\$/g, (_, math) => {
-        try {
-          return window.katex.renderToString(math.trim(), { displayMode: false, throwOnError: false });
-        } catch (e) {
-          return `$${math}$`;
-        }
-      });
-    }
-
-    // Step 2: Render Markdown
-    if (libsReady && window.marked && window.marked.parse) {
-      try {
-        return window.marked.parse(text);
-      } catch (e) {
-        return text.replace(/\n/g, '<br/>');
-      }
-    }
-    return text.replace(/\n/g, '<br/>');
-  };
-
   return (
     <div
       onClick={onFocus}
       className={`${className} cursor-text hover:bg-slate-50/50 rounded p-1 transition-colors min-h-[1.5em] prose-sm prose-slate max-w-none`}
-      dangerouslySetInnerHTML={{ __html: getRenderedContent() }}
+      dangerouslySetInnerHTML={{ __html: renderedContent }}
     />
   );
 }
