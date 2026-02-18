@@ -140,8 +140,17 @@
             "id": 2004,
             "displayId": "CTL-04",
             "front": "Explain **parameter passing** in Java. What is the difference between passing primitive types and objects?",
-            "back": "Java uses **pass-by-value** for both primitive types and objects, but with different implications:\n\n**Primitive types** (int, double, boolean, etc.): The actual value is copied and passed to the method. Changes made inside the method do not affect the original variable.\n\n**Objects**: A copy of the reference (memory address) is passed, not the object itself. Changes to the object's properties inside the method affect the original object, but reassigning the parameter variable does not affect the original reference.\n\nExample:\n```java\nvoid changePrimitive(int x) { x = 10; } // doesn't affect caller's x\nvoid changeObject(MyClass obj) { obj.property = 5; } // affects caller's object\n```",
+            "back": "Java uses **pass-by-value** for both primitive types and objects, but with different implications:\n\n**Primitive types** (int, double, boolean, etc.): The actual value is copied and passed to the method. Changes made inside the method do not affect the original variable.\n\n**Objects**: A copy of the reference (memory address) is passed, not the object itself. Changes to the object's properties inside the method affect the original object, but reassigning the parameter variable does not affect the original reference.\n\nCorrect approach:\n```java\nvoid changeObject(MyClass obj) { obj.property = 5; } // ✅ affects caller's object\n```\n\nIncorrect approach:\n```java\nvoid changePrimitive(int x) { x = 10; } // ❌ doesn't affect caller's x\n```",
             "category": "Functions",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 2005,
+            "displayId": "TEST-01",
+            "front": "What is a **simple Java class with syntax highlighting**?",
+            "back": "Here's a correctly implemented Bank class:\n\n```java\npublic class BankAccount {\n  private double balance;\n  \n  public BankAccount(double initialBalance) { // ✅ proper constructor\n    this.balance = initialBalance;\n  }\n  \n  public void withdraw(double amount) {\n    if (amount > 0 && amount <= balance) { // ✅ proper validation\n      balance -= amount;\n    }\n  }\n}\n```\n\nHere's an incorrect implementation:\n\n```java\npublic class BadBank {\n  public double balance; // ❌ should be private\n  \n  public void withdraw(double amount) {\n    balance = balance - amount; // ❌ no validation\n  }\n}\n```",
+            "category": "Examples",
             "frontImage": null,
             "backImage": null
           }
@@ -268,6 +277,300 @@
             "front": "What are the best practices for error handling and resource management in Java?",
             "back": "**Best practices for error handling:**\n1. Catch specific exceptions rather than generic Exception\n2. Provide meaningful error messages for debugging\n3. Log exceptions appropriately\n4. Use try-with-resources for automatic resource cleanup:\n```java\ntry (FileReader fr = new FileReader(\"file.txt\")) {\n  // use fr\n} catch (IOException e) {\n  // handle error\n}\n```\n5. Clean up resources in finally blocks or use try-with-resources\n6. Don't suppress exceptions silently; handle or re-throw appropriately\n7. Distinguish between recoverable errors (catch and handle) and fatal errors (let propagate)\n8. Create custom exceptions for application-specific errors",
             "category": "ErrorHandling",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "section-3",
+    "title": "Git Introduction",
+    "decks": [
+      {
+        "id": "deck-9",
+        "title": "Chapter 1: Git Basics and Configuration",
+        "cards": [
+          {
+            "id": 6001,
+            "displayId": "GIT-01",
+            "front": "What is **Git** and why is it important in software development?",
+            "back": "**Git** is a distributed version control system (VCS) that tracks changes to files over time. It allows multiple developers to work on the same project simultaneously without conflicts.\n\n**Why it's important:**\n- **History tracking**: See who changed what and when\n- **Collaboration**: Multiple developers can work together\n- **Branching**: Experiment with features independently\n- **Rollback**: Revert to previous versions if needed\n- **Distributed**: Each developer has a complete copy of the project history\n\nGit is the industry standard for version control in modern software development.",
+            "category": "Git Basics",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6002,
+            "displayId": "GIT-02",
+            "front": "What is **version control** and what problems does it solve?",
+            "back": "**Version control** is a system that records changes to files over time, allowing you to track and manage different versions of your project.\n\n**Problems it solves:**\n- **Tracking changes**: Know exactly what changed, who changed it, and why\n- **Collaboration conflicts**: Merge changes from multiple developers safely\n- **Accidental deletions**: Recover lost code from previous commits\n- **Feature development**: Work on features independently without affecting main codebase\n- **Code review**: Review changes before merging them\n- **Release management**: Maintain multiple versions of software simultaneously\n\nWithout version control, developers would struggle with file naming (v1, v2, final, final_final) and lose the ability to understand code evolution.",
+            "category": "Git Basics",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6003,
+            "displayId": "GIT-03",
+            "front": "What does `git init` do and when would you use it?",
+            "back": "**`git init`** initializes a new Git repository in the current directory.\n\n**What it does:**\n- Creates a hidden `.git` folder containing all Git configuration and history\n- Sets up the necessary Git infrastructure to start tracking files\n- Initializes the default branch (usually `main` or `master`)\n\n**When to use it:**\n- Starting a new project from scratch\n- Converting an existing project folder to a Git repository\n- Initializing a local repository before pushing to a remote (e.g., GitHub)\n\n**Example:**\n```bash\nmkdir my-project\ncd my-project\ngit init\n```\n\nAfter this, you can start adding and committing files to version control.",
+            "category": "Git Basics",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6004,
+            "displayId": "GIT-04",
+            "front": "What is **`git config`** and what are the three configuration levels in Git?",
+            "back": "**`git config`** is a command that sets and retrieves configuration variables for Git. It controls Git behavior like user identity, editor preferences, and merge strategies.\n\n**Three configuration levels:**\n\n1. **System** (`--system`): Applies to all users on the computer. Config file: `/etc/gitconfig`\n```bash\ngit config --system user.name \"Company Name\"\n```\n\n2. **Global** (`--global`): Applies to the current user. Config file: `~/.gitconfig`\n```bash\ngit config --global user.name \"Your Name\"\n```\n\n3. **Local** (`--local`): Applies only to the current repository. Config file: `.git/config`\n```bash\ngit config --local user.email \"project-specific@example.com\"\n```\n\n**Priority order**: Local → Global → System (local overrides global, which overrides system).\n\n**Common configs:**\n```bash\ngit config --global user.name \"John Doe\"\ngit config --global user.email \"john@example.com\"\n```",
+            "category": "Git Basics",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6005,
+            "displayId": "GIT-05",
+            "front": "What does `git status` show and why is it useful?",
+            "back": "**`git status`** displays the current state of your working directory and staging area.\n\n**What it shows:**\n- **Current branch**: Which branch you're on\n- **Untracked files**: New files not yet added to Git\n- **Modified files**: Files changed but not staged for commit\n- **Staged files**: Files ready to be committed\n- **Commits ahead/behind**: How many commits ahead/behind the remote branch\n\n**Example output:**\n```\nOn branch main\nChanges to be committed:\n  new file: app.js\n\nChanges not staged for commit:\n  modified: README.md\n\nUntracked files:\n  config.json\n```\n\n**Why it's useful:**\n- See what changes you've made before committing\n- Avoid accidentally committing sensitive files\n- Understand the current state of your repository\n- Plan your next commit\n\n**Pro tip**: Run `git status` frequently during development to stay aware of changes.",
+            "category": "Git Basics",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6006,
+            "displayId": "GIT-06",
+            "front": "Explain the difference between `git add` and `git commit`. What is the **staging area**?",
+            "back": "**Staging area** (also called *index*) is an intermediate step between your working directory and the repository. It lets you choose exactly which changes to include in your next commit.\n\n**`git add`** moves changes from the working directory to the staging area:\n```bash\ngit add filename        # Add specific file\ngit add .               # Add all modified files\ngit add *.js            # Add all .js files\n```\n\n**`git commit`** takes staged changes and saves them permanently to the repository:\n```bash\ngit commit -m \"Your message here\"\n```\n\n**Workflow:**\n```\nWorking Directory → git add → Staging Area → git commit → Repository\n```\n\n**Why this two-step process?**\n- **Precision**: Commit only related changes, leaving other work uncommitted\n- **Code review**: Review staged changes before committing\n- **Atomic commits**: Create meaningful, focused commits rather than \"dump everything\"\n\n**Example:**\n```bash\ngit add feature.js\ngit add tests/feature.test.js\ngit commit -m \"Add new feature with tests\"\n# docs.md is modified but not committed\n```",
+            "category": "Git Basics",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6007,
+            "displayId": "GIT-07",
+            "front": "What is `.gitignore` and provide examples of files that should typically be ignored?",
+            "back": "**`.gitignore`** is a special file that tells Git which files and directories to ignore (not track).\n\n**Files to typically ignore:**\n- **Dependencies**: `node_modules/`, `venv/`, `.gradle/`\n- **Build outputs**: `dist/`, `build/`, `*.o`, `*.class`\n- **IDE settings**: `.vscode/`, `.idea/`, `*.swp`\n- **Environment files**: `.env`, `.env.local`, `secrets.json`\n- **OS files**: `.DS_Store`, `Thumbs.db`\n- **Logs**: `*.log`, `logs/`\n- **Cache**: `.cache/`, `tmp/`\n\n**Example `.gitignore` file:**\n```\n# Dependencies\nnode_modules/\nvenv/\n\n# Environment variables\n.env\n.env.local\n\n# IDE\n.vscode/\n.idea/\n\n# OS\n.DS_Store\nThumbs.db\n\n# Logs\n*.log\n```\n\n**Rules:**\n- Lines starting with `#` are comments\n- `*.ext` matches all files with that extension\n- `folder/` matches a directory and its contents\n- `!important.txt` uses `!` to exclude from ignore\n\n**Important**: Add `.gitignore` early in the project to prevent accidentally committing sensitive data.",
+            "category": "Git Basics",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6008,
+            "displayId": "GIT-08",
+            "front": "What does `git log` do and what are common options to view commit history?",
+            "back": "**`git log`** displays the commit history of your repository, showing previous commits with metadata.\n\n**What it shows for each commit:**\n- Commit hash (SHA-1 identifier)\n- Author name and email\n- Date and time\n- Commit message\n\n**Common options:**\n\n```bash\ngit log                          # Full commit history\ngit log --oneline                # One line per commit (compact)\ngit log -n 5                      # Last 5 commits\ngit log --graph --all --oneline  # Visual branch graph\ngit log --author=\"John\"          # Commits by specific author\ngit log --since=\"2 weeks ago\"    # Commits in time range\ngit log filename                 # History of specific file\ngit log -p                       # Show full diffs of each commit\n```\n\n**Example output with `--oneline`:**\n```\ne0cb827 Add Git introduction flashcards\nbf64fc8 Add Java flashcards\nb5cfc07 First commit\n```\n\n**Why it's useful:**\n- Understand project history and evolution\n- Track when features were added or bugs were introduced\n- Review commit messages and author information\n- Investigate which commit caused a problem",
+            "category": "Git Basics",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6009,
+            "displayId": "GIT-09",
+            "front": "What does `git diff` show and how do you use it to compare changes?",
+            "back": "**`git diff`** shows line-by-line differences between file versions, helping you understand exactly what changed.\n\n**Common usage:**\n\n```bash\ngit diff                    # Unstaged changes (working dir vs staging area)\ngit diff --staged           # Staged changes (staging area vs last commit)\ngit diff HEAD               # All changes since last commit\ngit diff HEAD~1             # Changes in the last commit\ngit diff branch1 branch2    # Differences between two branches\ngit diff filename           # Changes in specific file\n```\n\n**Example output:**\n```\ndiff --git a/app.js b/app.js\nindex 1234567..abcdefg 100644\n--- a/app.js\n+++ b/app.js\n@@ -5,3 +5,5 @@\n const express = require('express');\n const app = express();\n+const PORT = 3000;\n+app.listen(PORT);\n```\n\nThe `+` prefix shows added lines, `-` shows deleted lines, context lines have no prefix.\n\n**Why it's useful:**\n- Review changes before staging or committing\n- Understand what modified files contain\n- Debug unintended changes\n- Code review process\n- Identify exactly what lines changed between commits",
+            "category": "Git Basics",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6010,
+            "displayId": "GIT-10",
+            "front": "Explain the typical Git workflow: initialize, add, commit, and view history.",
+            "back": "**Complete Git workflow for a new project:**\n\n**1. Initialize repository:**\n```bash\ngit init\n```\n\n**2. Configure Git (first time only):**\n```bash\ngit config --global user.name \"Your Name\"\ngit config --global user.email \"your.email@example.com\"\n```\n\n**3. Create or modify files** in your working directory.\n\n**4. Check status:**\n```bash\ngit status  # See what changed\n```\n\n**5. Review changes:**\n```bash\ngit diff    # See line-by-line changes\n```\n\n**6. Stage changes:**\n```bash\ngit add file.js         # Add specific file\ngit add .               # Add all changes\n```\n\n**7. Commit with message:**\n```bash\ngit commit -m \"Descriptive message about your changes\"\n```\n\n**8. View history:**\n```bash\ngit log --oneline\n```\n\n**Repeat steps 3-7** for each set of logical changes.\n\n**Best practices:**\n- Commit frequently with focused changes\n- Write clear, descriptive commit messages\n- Run `git status` and `git diff` before committing\n- Keep commits atomic (one feature/fix per commit)\n- Use `.gitignore` from the start",
+            "category": "Git Basics",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
+      },
+      {
+        "id": "deck-10",
+        "title": "Chapter 2: Branching and Merging",
+        "cards": [
+          {
+            "id": 6011,
+            "displayId": "GIT-11",
+            "front": "What is a **git branch** and why would you create one?",
+            "back": "A **git branch** is an independent line of development that allows you to work on features or fixes without affecting the main codebase. Branches are pointers to commits and enable:\n- Parallel development by multiple developers\n- Isolation of experimental features\n- Easy cleanup and organization\n- Safer integration via pull requests\n\nExample: `git branch feature/login-page` creates a new branch.",
+            "category": "Branching & Merging",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6012,
+            "displayId": "GIT-12",
+            "front": "What is the difference between `git checkout` and `git switch`?",
+            "back": "Both commands switch branches, but they have different purposes:\n\n**`git checkout [branch]`**: Legacy command that switches branches and can also checkout files or commits. It's a multi-purpose command that can be confusing.\n\n**`git switch [branch]`**: Modern command (Git 2.23+) specifically designed for switching branches. It's clearer in intent and safer.\n\nExample:\n```bash\ngit checkout main     # Legacy way\ngit switch main       # Modern way (preferred)\n```\n\nUse `git switch` in new projects for clarity.",
+            "category": "Branching & Merging",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6013,
+            "displayId": "GIT-13",
+            "front": "How do you create a new branch and switch to it in one command?",
+            "back": "You can use either of these commands:\n\n**Using `git checkout`:**\n```bash\ngit checkout -b feature/new-feature\n```\n\n**Using `git switch`:**\n```bash\ngit switch -c feature/new-feature\n```\n\nBoth create a new branch based on the current HEAD and switch to it immediately. The `-b` flag in `checkout` and `-c` flag in `switch` both mean \"create and switch.\"\n\nThe `git switch` approach is recommended for modern Git workflows.",
+            "category": "Branching & Merging",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6014,
+            "displayId": "GIT-14",
+            "front": "What are **git branch naming conventions** and why are they important?",
+            "back": "Branch naming conventions improve code organization and team communication. Common patterns:\n\n**Feature branches:**\n```\nfeature/user-authentication\nfeature/payment-integration\n```\n\n**Bug fix branches:**\n```\nbugfix/fix-login-error\nhotfix/critical-security-patch\n```\n\n**Other types:**\n```\nrefactor/update-database-layer\ndocs/api-documentation\n```\n\n**Best practices:**\n- Use lowercase letters and hyphens (no spaces)\n- Be descriptive but concise\n- Prefix with type: feature/, bugfix/, hotfix/, refactor/, docs/\n- Avoid special characters that might cause shell issues\n\nThese conventions make logs readable and help teams understand branch purpose at a glance.",
+            "category": "Branching & Merging",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6015,
+            "displayId": "GIT-15",
+            "front": "Explain **git merge** and the two common merge strategies.",
+            "back": "**`git merge`** integrates changes from one branch into another. It combines the commit history of both branches.\n\n**Common merge strategies:**\n\n1. **Three-way merge** (standard):\n   ```bash\n   git merge feature/new-feature\n   ```\n   Creates a new merge commit combining both branch histories. Results in a merge commit that references both parents.\n\n2. **Squash merge** (flatten history):\n   ```bash\n   git merge --squash feature/new-feature\n   ```\n   Combines all commits from the branch into a single commit. Keeps history clean but loses individual commit details.\n\n**Three-way merge** is used when you want to preserve full history. **Squash merge** is useful for feature branches with many small commits.",
+            "category": "Branching & Merging",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6016,
+            "displayId": "GIT-16",
+            "front": "What is a **merge conflict** and how do you resolve it?",
+            "back": "A **merge conflict** occurs when Git cannot automatically merge changes because both branches modified the same lines in the same file.\n\n**How to resolve:**\n\n1. Run `git merge` and Git will notify you of conflicts\n2. Open the conflicted files - they contain markers:\n   ```\n   <<<<<<< HEAD\n   your changes\n   =======\n   their changes\n   >>>>>>> feature/branch\n   ```\n3. Manually edit the file to keep desired changes, remove markers\n4. Stage the resolved files:\n   ```bash\n   git add filename\n   ```\n5. Complete the merge:\n   ```bash\n   git commit -m \"Merge feature/branch with conflict resolution\"\n   ```\n\n**Prevention:** Communicate with teammates, keep branches short-lived, and rebase frequently to avoid divergence.",
+            "category": "Branching & Merging",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6017,
+            "displayId": "GIT-17",
+            "front": "What is a **fast-forward merge** and when does it occur?",
+            "back": "A **fast-forward merge** occurs when the target branch has no new commits since the source branch was created. Git simply moves the branch pointer forward without creating a merge commit.\n\n**Example:**\n```\nInitial state:\nmain:        A --- B --- C\nfeature:          └─── D --- E\n\nAfter git merge feature (fast-forward):\nmain:        A --- B --- C --- D --- E\n```\n\n**When it occurs:**\n- The target branch (main) has no commits after the source branch diverged\n- No new work was done on the target branch\n\n**To prevent fast-forward merge:**\n```bash\ngit merge --no-ff feature/branch\n```\nThis creates a merge commit even if fast-forward is possible. Useful for maintaining explicit branch history.\n\n**Advantage of fast-forward:** Cleaner, linear history.\n**Disadvantage:** Loses information about the branch that was merged.",
+            "category": "Branching & Merging",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6018,
+            "displayId": "GIT-18",
+            "front": "What is **git rebase** and how does it differ from **git merge**?",
+            "back": "**`git rebase`** reapplies commits from one branch onto another by replaying them on top of the target branch.\n\n**Example:**\n```\nBefore rebase:\nmain:        A --- B --- C\nfeature:          └─── D --- E\n\nAfter git rebase main:\nmain:        A --- B --- C\nfeature:              └─── D' --- E'\n```\nCommits D and E are replayed on top of C, creating new commits D' and E'.\n\n**git merge vs git rebase:**\n\n| Aspect | Merge | Rebase |\n|--------|-------|--------|\n| **History** | Creates merge commit, preserves both histories | Rewrites history, linear progression |\n| **Readability** | Non-linear, shows branch structure | Clean, linear history |\n| **Collaboration** | Safe for shared branches | **Never rebase shared/public branches** |\n| **Debugging** | Easier to see feature branches | Harder to trace feature history |\n\n**Best practice:** Use `rebase` for local branches before pushing, use `merge` for shared branches.",
+            "category": "Branching & Merging",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6019,
+            "displayId": "GIT-19",
+            "front": "How do you delete a git branch both locally and remotely?",
+            "back": "**Delete local branch:**\n```bash\ngit branch -d feature/completed-feature      # Safe delete (warns if not merged)\ngit branch -D feature/completed-feature      # Force delete\n```\nThe `-d` flag is safe - it warns if the branch hasn't been merged. Use `-D` to force delete.\n\n**Delete remote branch:**\n```bash\ngit push origin --delete feature/completed-feature\n# Or alternative syntax:\ngit push origin :feature/completed-feature\n```\n\n**Delete both local and remote at once:**\n```bash\ngit branch -d feature/completed-feature && git push origin --delete feature/completed-feature\n```\n\n**Important:** Always ensure the branch is merged before deleting, or you'll lose work. To check:\n```bash\ngit branch --merged    # Lists branches merged into current branch\ngit branch --no-merged # Lists branches NOT merged\n```",
+            "category": "Branching & Merging",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6020,
+            "displayId": "GIT-20",
+            "front": "What is the recommended **git workflow** for team collaboration using branches?",
+            "back": "**Recommended workflow (Git Flow variant):**\n\n1. **Create a feature branch** from `main` or `develop`:\n   ```bash\n   git checkout -b feature/user-auth\n   ```\n\n2. **Make commits** with clear, descriptive messages:\n   ```bash\n   git commit -m \"Add login form validation\"\n   ```\n\n3. **Push the branch** to remote:\n   ```bash\n   git push origin feature/user-auth\n   ```\n\n4. **Create a Pull Request (PR)** on GitHub/GitLab for code review\n\n5. **Address review feedback** with additional commits\n\n6. **Merge the PR** once approved (usually via `git merge --no-ff` to preserve history)\n\n7. **Delete the branch** after merging:\n   ```bash\n   git branch -d feature/user-auth\n   git push origin --delete feature/user-auth\n   ```\n\n**Key principles:**\n- One feature per branch\n- Keep branches short-lived (1-3 days of work)\n- Always use pull requests for code review\n- Never force-push to shared branches\n- Maintain descriptive branch names\n- Sync frequently with main to avoid conflicts",
+            "category": "Branching & Merging",
+            "frontImage": null,
+            "backImage": null
+          }
+        ]
+      },
+      {
+        "id": "deck-11",
+        "title": "Chapter 3: Collaboration and Remote Repositories",
+        "cards": [
+          {
+            "id": 6021,
+            "displayId": "GIT-21",
+            "front": "What is a **git remote**, and how do you view all configured remotes for a repository?",
+            "back": "A **git remote** is a reference to a remote repository (typically on a server like GitHub). It stores the URL and name of the remote location.\n\nTo view all configured remotes, use:\n```bash\ngit remote -v\n```\n\nThis displays both fetch and push URLs. The default remote is usually named `origin`. Add a new remote with:\n```bash\ngit remote add <name> <url>\n```",
+            "category": "Remote Repositories",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6022,
+            "displayId": "GIT-22",
+            "front": "What does **`git clone`** do, and how does it differ from **`git init`**?",
+            "back": "**`git clone`** downloads an entire remote repository to your local machine, including all commits, branches, and history:\n```bash\ngit clone <repository-url>\n```\n\n**`git init`** initializes a new, empty local repository from scratch.\n\n**Key differences:**\n- `clone` is for copying existing repositories; `init` creates a new one\n- `clone` automatically sets up the remote (`origin`); `init` requires manual remote configuration\n- `clone` includes full project history; `init` starts fresh\n\nUse `clone` to contribute to existing projects, `init` to start new projects.",
+            "category": "Remote Repositories",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6023,
+            "displayId": "GIT-23",
+            "front": "Explain the difference between **`git fetch`** and **`git pull`**.",
+            "back": "**`git fetch`** downloads commits and branches from the remote repository but does NOT merge them into your local branches:\n```bash\ngit fetch origin\n```\nIt updates remote-tracking branches (e.g., `origin/main`) safely.\n\n**`git pull`** performs both `fetch` and `merge` automatically:\n```bash\ngit pull origin main\n```\n\n**Key differences:**\n- `fetch` is safe; it won't modify your working directory or local branches\n- `pull` automatically merges, which can cause merge conflicts\n- Use `fetch` when you want to review changes before merging\n- Use `pull` for quick integration when you trust the remote changes\n\n**Best practice:** Use `fetch` then review with `git diff origin/main` before merging manually.",
+            "category": "Remote Repositories",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6024,
+            "displayId": "GIT-24",
+            "front": "What is the purpose of **`git push`**, and how do you push a new branch to a remote?",
+            "back": "**`git push`** uploads your local commits to a remote repository:\n```bash\ngit push origin main\n```\n\nThis updates the remote branch to match your local branch.\n\n**To push a new local branch to the remote:**\n```bash\ngit push -u origin feature-branch\n```\n\nThe `-u` (or `--set-upstream`) flag:\n- Creates the branch on the remote\n- Sets up tracking so future `git pull` knows which remote branch to use\n- Without `-u`, you must specify the branch name in future pushes\n\n**Common scenarios:**\n- Push to existing remote branch: `git push origin main`\n- Push a new branch: `git push -u origin my-feature`\n- Push all branches: `git push origin --all`\n- Push with force (dangerous): `git push origin main --force` (overwrites remote history)",
+            "category": "Remote Repositories",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6025,
+            "displayId": "GIT-25",
+            "front": "What is a **pull request (PR)**, and what is the typical workflow for creating and reviewing one on GitHub?",
+            "back": "A **pull request (PR)** is a proposal to merge changes from one branch into another (typically from a feature branch into `main`). It enables code review and discussion before integration.\n\n**GitHub PR workflow:**\n\n1. **Create a feature branch:** `git checkout -b feature-branch`\n2. **Make commits** with descriptive messages\n3. **Push to remote:** `git push -u origin feature-branch`\n4. **Open PR on GitHub:** Click \"Compare & pull request\" and write a clear description\n5. **Request reviewers:** Assign team members to review\n6. **Address feedback:** Make additional commits based on review comments\n7. **Merge:** Once approved, click \"Merge pull request\"\n8. **Delete branch:** Clean up by deleting the feature branch\n\n**Benefits:**\n- Code quality through peer review\n- Documentation via PR description\n- Discussion and knowledge sharing\n- CI/CD integration for automated testing",
+            "category": "Remote Repositories",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6026,
+            "displayId": "GIT-26",
+            "front": "Explain the concept of **upstream** vs **origin** in Git. How do they differ?",
+            "back": "**`origin`** is the default remote that points to YOUR fork or clone of the repository (typically on your GitHub account).\n\n**`upstream`** is an additional remote that points to the ORIGINAL repository from which you forked (the maintainer's repo).\n\n**Setup for contributed projects:**\n```bash\ngit remote add upstream https://github.com/original-owner/repo.git\ngit remote -v  # Shows both origin and upstream\n```\n\n**Typical workflow:**\n```bash\ngit fetch upstream          # Get latest from original repo\ngit rebase upstream/main    # Update your local branch\ngit push origin main        # Push to your fork\n```\n\n**Why both are needed:**\n- `origin` = your working copy (push here)\n- `upstream` = source of truth (pull latest changes from here)\n- Keeps your fork synced with the original project\n- Prevents divergence in long-term contributions",
+            "category": "Remote Repositories",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6027,
+            "displayId": "GIT-27",
+            "front": "What are the risks of **force pushing**, and when is it safe to use **`git push --force`**?",
+            "back": "**`git push --force`** overwrites remote history, discarding any commits not in your local branch. This is **dangerous** because:\n- Other developers' work may be lost\n- History becomes inconsistent across the team\n- Difficult to recover deleted commits\n- Causes merge conflicts for collaborators\n\n**When force push is safe:**\n- **Unpublished branches:** Feature branches not yet merged (confirm no one else is using it)\n- **Your own fork:** In your personal repository\n- **Before PR merge:** On a branch awaiting review\n- **After explicit team agreement:** With communication\n\n**Safer alternatives:**\n```bash\ngit push --force-with-lease  # Only overwrites if remote matches your last fetch\ngit revert <commit>          # Undoes changes with a new commit (preserves history)\ngit reset --soft HEAD~1      # Undo last commit locally (doesn't affect remote yet)\n```\n\n**Golden rule:** Never force push to `main` or shared branches. Use caution even on feature branches.",
+            "category": "Remote Repositories",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6028,
+            "displayId": "GIT-28",
+            "front": "What does it mean when **`git push` is rejected**, and what are the common causes and solutions?",
+            "back": "**Push rejection** occurs when the remote refuses your push. Common causes and solutions:\n\n**1. Remote has commits you don't have:**\n```bash\ngit fetch origin              # Download remote changes\ngit rebase origin/main        # Rebase your commits on top\ngit push origin main          # Now push will succeed\n```\n\n**2. Branch protection rules** (e.g., requiring PR review):\n- Create a PR instead of pushing directly\n\n**3. Insufficient permissions:**\n- Ensure you have write access to the repository\n\n**4. Authentication failure:**\n- Check SSH keys or GitHub credentials\n\n**5. Large files or history violations:**\n- Repository may reject large files or sensitive data\n\n**Prevention strategies:**\n- `git pull --rebase` before pushing\n- `git fetch` regularly to stay updated\n- Use `git status` to check current state\n- Follow team conventions\n\n**Never use `--force` to resolve rejection.** It indicates you're out of sync; always merge/rebase first.",
+            "category": "Remote Repositories",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6029,
+            "displayId": "GIT-29",
+            "front": "Describe a typical **GitHub collaborative workflow** for a team working on the same project.",
+            "back": "**Typical GitHub team workflow:**\n\n1. **Create a feature branch** from `main`:\n```bash\ngit checkout main\ngit pull origin main\ngit checkout -b feature/user-auth\n```\n\n2. **Make commits** with clear messages:\n```bash\ngit add .\ngit commit -m \"Add login form and validation\"\n```\n\n3. **Push to remote:**\n```bash\ngit push -u origin feature/user-auth\n```\n\n4. **Open Pull Request** on GitHub with description\n\n5. **CI/CD runs:** Automated tests, linting, and builds\n\n6. **Code review:** Team members comment and request changes\n\n7. **Address feedback:** Make additional commits, tests pass\n\n8. **Merge:** Maintainer approves and merges to `main`\n\n9. **Delete branch:** Clean up completed feature branch\n\n**Best practices:**\n- One feature per branch\n- Small, focused PRs (easier to review)\n- Descriptive commit messages\n- Require reviews before merging\n- Protect `main` branch (no direct pushes)\n- Use consistent naming conventions\n- Deploy merged code to production",
+            "category": "Remote Repositories",
+            "frontImage": null,
+            "backImage": null
+          },
+          {
+            "id": 6030,
+            "displayId": "GIT-30",
+            "front": "How do you **synchronize your fork with the upstream repository** to prevent it from falling behind?",
+            "back": "**Keeping your fork in sync with upstream:**\n\n1. **Add upstream remote** (if not already done):\n```bash\ngit remote add upstream https://github.com/original-owner/repo.git\n```\n\n2. **Fetch latest from upstream:**\n```bash\ngit fetch upstream\n```\n\n3. **Rebase your branch on upstream/main:**\n```bash\ngit checkout main\ngit rebase upstream/main\n```\n\n4. **Push updated main to your fork:**\n```bash\ngit push origin main\n```\n\n**Alternative: Merge instead of rebase:**\n```bash\ngit merge upstream/main\ngit push origin main\n```\n\n**Rebase vs Merge:**\n- **Rebase** (preferred): Creates linear history, cleaner logs\n- **Merge** (safer): Preserves all commits, easier to understand what happened\n\n**Automating with GitHub:**\n- Some projects enable \"Allow auto-merge on pull requests\"\n- Use GitHub Actions to auto-sync forks\n- Or set up a scheduled workflow to keep forks updated\n\n**Check sync status:**\n```bash\ngit log --oneline upstream/main..origin/main  # Commits ahead\ngit log --oneline origin/main..upstream/main  # Commits behind\n```",
+            "category": "Remote Repositories",
             "frontImage": null,
             "backImage": null
           }

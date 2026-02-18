@@ -94,37 +94,131 @@ export default function App() {
     setExpandedSections(sections.map(s => s.id));
   }, [sections]);
 
-  // Load External Libraries for Markdown (Marked) and LaTeX (KaTeX)
+  // Load External Libraries for Syntax Highlighting (Highlight.js), Markdown (Marked), and LaTeX (KaTeX)
   useEffect(() => {
-    let loaded = { marked: false, katex: false };
+    let loaded = { hljs: false, marked: false, markedHighlight: false, katex: false };
+    let markedHighlightScript = null;
 
     const checkReady = () => {
-      if (loaded.marked && loaded.katex && window.marked && window.katex) {
-        setLibsReady(true);
+      if (!loaded.hljs || !loaded.marked || !loaded.markedHighlight || !loaded.katex) return;
+      if (!window.hljs || !globalThis.marked?.Marked || !globalThis.markedHighlight || !window.katex) return;
+
+      const { Marked } = globalThis.marked;
+      const { markedHighlight } = globalThis.markedHighlight;
+
+      // Create marked instance with highlight support
+      window._markedInstance = new Marked();
+      window._markedInstance.use(
+        markedHighlight({
+          emptyLangClass: 'hljs',
+          langPrefix: 'hljs language-',
+          highlight(code, lang) {
+            const language = window.hljs.getLanguage(lang) ? lang : 'plaintext';
+            return window.hljs.highlight(code, { language }).value;
+          }
+        })
+      );
+
+      // Store the diff detection function globally
+      window._processDiffVisualization = (html) => {
+        // Find all code blocks and wrap them with diff visualization
+        return html.replace(/<pre><code class="hljs language-([^"]*)">([\s\S]*?)<\/code><\/pre>/g, (match, lang, code) => {
+          const displayLang = lang && lang !== 'plaintext' ? lang : '';
+          const decodedCode = new DOMParser().parseFromString('<!doctype html><body>' + code, 'text/html').body.textContent;
+
+          const hasOk    = /\/\/[^\S\n]*✅/.test(decodedCode);
+          const hasError = /\/\/[^\S\n]*❌/.test(decodedCode);
+          let borderClass = '';
+          if (hasOk && !hasError)      borderClass = ' code-diff-ok';
+          else if (hasError && !hasOk) borderClass = ' code-diff-error';
+          else if (hasOk && hasError)  borderClass = ' code-diff-mixed';
+
+          return `<div class="code-block-wrapper${borderClass}">
+  <div class="code-block-header">
+    ${displayLang ? `<span class="code-lang-badge">${displayLang}</span>` : '<span></span>'}
+    <button class="code-copy-btn" onclick="(function(btn){
+      var codeEl = btn.closest('.code-block-wrapper').querySelector('code');
+      if (codeEl && navigator.clipboard) {
+        navigator.clipboard.writeText(codeEl.innerText).then(function(){
+          var orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(function(){ btn.textContent = orig; }, 1500);
+        });
       }
+    })(this)">Copy</button>
+  </div>
+  <pre><code class="hljs language-${lang}">${code}</code></pre>
+</div>`;
+        });
+      };
+
+      setLibsReady(true);
     };
 
-    const markedScript = document.createElement('script');
-    markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
-    markedScript.async = true;
-    markedScript.onload = () => { loaded.marked = true; checkReady(); };
-    document.head.appendChild(markedScript);
+    // Inject code block styles once
+    if (!document.getElementById('kv-code-styles')) {
+      const style = document.createElement('style');
+      style.id = 'kv-code-styles';
+      style.textContent = `
+        .code-block-wrapper { border-radius:8px; overflow:hidden; margin:0.75em 0; border:1px solid #e2e8f0; font-size:0.8rem; }
+        .code-block-wrapper.code-diff-ok    { border-left:4px solid #22c55e; }
+        .code-block-wrapper.code-diff-error { border-left:4px solid #ef4444; }
+        .code-block-wrapper.code-diff-mixed { border-left:4px solid #f59e0b; }
+        .code-block-header { display:flex; justify-content:space-between; align-items:center; padding:4px 10px; background:#f6f8fa; border-bottom:1px solid #e2e8f0; }
+        .code-lang-badge { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#64748b; }
+        .code-copy-btn { font-size:0.65rem; font-weight:600; color:#64748b; background:transparent; border:1px solid #cbd5e1; border-radius:4px; padding:1px 7px; cursor:pointer; }
+        .code-copy-btn:hover { background:#e2e8f0; color:#334155; }
+        .code-block-wrapper pre { margin:0; padding:0.75em 1em; background:#fff; overflow-x:auto; }
+        .code-block-wrapper pre code.hljs { padding:0; background:transparent; font-size:0.8rem; line-height:1.55; }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // CSS (no dependency, load immediately)
+    const hljsCSS = document.createElement('link');
+    hljsCSS.rel = 'stylesheet';
+    hljsCSS.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css';
+    document.head.appendChild(hljsCSS);
 
     const katexCSS = document.createElement('link');
     katexCSS.rel = 'stylesheet';
     katexCSS.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css';
     document.head.appendChild(katexCSS);
 
+    // hljs JS (independent)
+    const hljsScript = document.createElement('script');
+    hljsScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js';
+    hljsScript.async = true;
+    hljsScript.onload = () => { loaded.hljs = true; checkReady(); };
+    document.head.appendChild(hljsScript);
+
+    // KaTeX JS (independent)
     const katexScript = document.createElement('script');
     katexScript.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js';
     katexScript.async = true;
     katexScript.onload = () => { loaded.katex = true; checkReady(); };
     document.head.appendChild(katexScript);
 
+    // marked UMD → then chain marked-highlight
+    const markedScript = document.createElement('script');
+    markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js';
+    markedScript.async = true;
+    markedScript.onload = () => {
+      loaded.marked = true;
+      markedHighlightScript = document.createElement('script');
+      markedHighlightScript.src = 'https://cdn.jsdelivr.net/npm/marked-highlight/lib/index.umd.js';
+      markedHighlightScript.async = true;
+      markedHighlightScript.onload = () => { loaded.markedHighlight = true; checkReady(); };
+      document.head.appendChild(markedHighlightScript);
+    };
+    document.head.appendChild(markedScript);
+
     return () => {
-      [markedScript, katexCSS, katexScript].forEach(el => {
-        if (document.head.contains(el)) document.head.removeChild(el);
-      });
+      [hljsCSS, katexCSS, hljsScript, markedScript, markedHighlightScript, katexScript]
+        .filter(Boolean)
+        .forEach(el => { if (document.head.contains(el)) document.head.removeChild(el); });
+      const s = document.getElementById('kv-code-styles');
+      if (s) document.head.removeChild(s);
     };
   }, []);
 
@@ -185,6 +279,32 @@ export default function App() {
 
   const toggleDeck = (id) => {
     setActiveDeckIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const selectAllInSection = (sectionId) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+    const deckIds = section.decks.map(d => d.id);
+    setActiveDeckIds(prev => {
+      const newIds = new Set(prev);
+      deckIds.forEach(id => newIds.add(id));
+      return Array.from(newIds);
+    });
+  };
+
+  const deselectAllInSection = (sectionId) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+    const deckIds = new Set(section.decks.map(d => d.id));
+    setActiveDeckIds(prev => prev.filter(id => !deckIds.has(id)));
+  };
+
+  const isolateDeck = (deckId, sectionId) => {
+    setActiveDeckIds([deckId]);
+    // Auto-expand the section
+    setExpandedSections(prev =>
+      prev.includes(sectionId) ? prev : [...prev, sectionId]
+    );
   };
 
   const updateCard = (sectionId, deckId, cardId, field, value) => {
@@ -302,20 +422,41 @@ export default function App() {
               {sections.map(section => {
                 const isExpanded = expandedSections.includes(section.id);
                 const totalCards = section.decks.reduce((acc, d) => acc + d.cards.length, 0);
+                const selectedDecksInSection = section.decks.filter(d => activeDeckIds.includes(d.id)).length;
+                const allSelected = selectedDecksInSection === section.decks.length;
+                const someSelected = selectedDecksInSection > 0 && !allSelected;
+
                 return (
                   <div key={section.id}>
-                    {/* Section header — clickable to toggle */}
+                    {/* Section header — clickable to toggle, with checkbox */}
                     <div
-                      onClick={() => toggleSection(section.id)}
-                      className="flex items-center gap-2 px-3 py-2 text-slate-500 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 text-slate-500 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors group"
                     >
                       <ChevronDown
                         size={14}
                         className={`transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`}
+                        onClick={() => toggleSection(section.id)}
                       />
                       <BookOpen size={16} />
-                      <span className="text-sm font-bold flex-1 truncate">{section.title}</span>
+                      <span className="text-sm font-bold flex-1 truncate" onClick={() => toggleSection(section.id)}>{section.title}</span>
                       <span className="text-[10px] text-slate-400">{totalCards}</span>
+                      {/* Section selection checkbox */}
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        ref={el => {
+                          if (el) el.indeterminate = someSelected;
+                        }}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            selectAllInSection(section.id);
+                          } else {
+                            deselectAllInSection(section.id);
+                          }
+                        }}
+                        className="w-4 h-4 rounded cursor-pointer"
+                        title={allSelected ? 'Deselect all decks in this book' : someSelected ? 'Some decks selected' : 'Select all decks in this book'}
+                      />
                     </div>
 
                     {/* Decks under this section */}
@@ -325,7 +466,12 @@ export default function App() {
                           <div
                             key={deck.id}
                             onClick={() => toggleDeck(deck.id)}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              isolateDeck(deck.id, section.id);
+                            }}
                             className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all ${activeDeckIds.includes(deck.id) ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-100' : 'text-slate-600 hover:bg-slate-50'}`}
+                            title="Right-click to isolate this deck"
                           >
                             <span className="text-sm font-medium truncate">{deck.title}</span>
                             <span className="text-[10px] bg-slate-200/50 px-1.5 rounded-full font-bold">{deck.cards.length}</span>
@@ -559,6 +705,33 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady }) {
 function SmartField({ value, isEditing, libsReady, onFocus, onBlur, onPaste, className }) {
   const editRef = useRef(null);
 
+  // Memoized rendered content (must come before conditional return)
+  const renderedContent = useMemo(() => {
+    let text = value || '';
+    if (libsReady && window.katex) {
+      text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => {
+        try { return window.katex.renderToString(math.trim(), { displayMode: true, throwOnError: false }); }
+        catch (e) { return `$$${math}$$`; }
+      });
+      text = text.replace(/\$([^\$\n]+?)\$/g, (_, math) => {
+        try { return window.katex.renderToString(math.trim(), { displayMode: false, throwOnError: false }); }
+        catch (e) { return `$${math}$`; }
+      });
+    }
+    if (libsReady && window._markedInstance) {
+      try {
+        let html = window._markedInstance.parse(text);
+        // Apply diff visualization post-processing
+        if (window._processDiffVisualization) {
+          html = window._processDiffVisualization(html);
+        }
+        return html;
+      }
+      catch (e) { return text.replace(/\n/g, '<br/>'); }
+    }
+    return text.replace(/\n/g, '<br/>');
+  }, [value, libsReady]);
+
   // Reliable auto-focus when entering edit mode
   useEffect(() => {
     if (isEditing && editRef.current) {
@@ -589,46 +762,11 @@ function SmartField({ value, isEditing, libsReady, onFocus, onBlur, onPaste, cla
     );
   }
 
-  const getRenderedContent = () => {
-    let text = value || '';
-
-    // Step 1: Render LaTeX math with KaTeX before Markdown
-    if (libsReady && window.katex) {
-      // Display math first: $$...$$
-      text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => {
-        try {
-          return window.katex.renderToString(math.trim(), { displayMode: true, throwOnError: false });
-        } catch (e) {
-          return `$$${math}$$`;
-        }
-      });
-
-      // Inline math: $...$  (careful not to match already-processed $$)
-      text = text.replace(/\$([^\$\n]+?)\$/g, (_, math) => {
-        try {
-          return window.katex.renderToString(math.trim(), { displayMode: false, throwOnError: false });
-        } catch (e) {
-          return `$${math}$`;
-        }
-      });
-    }
-
-    // Step 2: Render Markdown
-    if (libsReady && window.marked && window.marked.parse) {
-      try {
-        return window.marked.parse(text);
-      } catch (e) {
-        return text.replace(/\n/g, '<br/>');
-      }
-    }
-    return text.replace(/\n/g, '<br/>');
-  };
-
   return (
     <div
       onClick={onFocus}
       className={`${className} cursor-text hover:bg-slate-50/50 rounded p-1 transition-colors min-h-[1.5em] prose-sm prose-slate max-w-none`}
-      dangerouslySetInnerHTML={{ __html: getRenderedContent() }}
+      dangerouslySetInnerHTML={{ __html: renderedContent }}
     />
   );
 }
