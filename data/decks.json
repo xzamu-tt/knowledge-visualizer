@@ -11,7 +11,7 @@
             "id": 101,
             "displayId": "BAS-01",
             "front": "What is **Reliability** in system design?",
-            "back": "The ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling.",
+            "back": "The ability of a system to continue to work *correctly* even when things go wrong.\n\n### Key aspects:\n- Fault tolerance\n- Hardware redundancy\n- Error handling.\n\n",
             "category": "Basics",
             "frontImage": null,
             "backImage": null

@@ -90,6 +90,8 @@ export default function App() {
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [revealedCardIds, setRevealedCardIds] = useState(new Set());
   const [cardSize, setCardSize] = useState(3);
+  const [editingCardId, setEditingCardId] = useState(null);
+  const [editingSection, setEditingSection] = useState(null);
 
   const GRID_CLASSES = {
     1: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
@@ -273,9 +275,33 @@ export default function App() {
   // Listen for all keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Handle Tab → switch sections while editing (works even in contentEditable)
+      if (e.key === 'Tab' && editingCardId !== null) {
+        e.preventDefault();
+        setEditingSection(prev => prev === 'front' ? 'back' : 'front');
+        return;
+      }
+
+      // Handle Cmd/Ctrl+S → save and exit edit mode (works even in contentEditable)
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        if (editingCardId !== null) {
+          e.preventDefault();
+          setEditingCardId(null);
+          setEditingSection(null);
+          return;
+        }
+      }
+
+      // Handle Escape → deselect (works even in contentEditable)
+      if (e.key === 'Escape') {
+        setSelectedCardId(null);
+        return;
+      }
+
+      // Guard: don't handle other shortcuts while in contentEditable/INPUT
       if (e.target.isContentEditable || e.target.tagName === 'INPUT') return;
 
-      // Undo (existing)
+      // Undo (Cmd/Ctrl+Z)
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
         undo();
@@ -305,6 +331,15 @@ export default function App() {
         }
       }
 
+      // Cmd/Ctrl+E → enter/start edit mode
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        if (selectedCardId === null) return;
+        // Start editing this card (front section first)
+        setEditingCardId(selectedCardId);
+        setEditingSection('front');
+      }
+
       // + or = → bigger cards (fewer columns)
       if ((e.key === '+' || e.key === '=') && !e.ctrlKey && !e.metaKey) {
         setCardSize(p => Math.min(5, p + 1));
@@ -314,9 +349,6 @@ export default function App() {
       if (e.key === '-' && !e.ctrlKey && !e.metaKey) {
         setCardSize(p => Math.max(1, p - 1));
       }
-
-      // Escape → deselect
-      if (e.key === 'Escape') setSelectedCardId(null);
 
       // Arrow keys → navigate between cards
       if (['ArrowLeft', 'ArrowUp'].includes(e.key)) {
@@ -357,7 +389,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undoHistory, selectedCardId, sections, activeDeckIds, allVisibleCards])
+  }, [undoHistory, selectedCardId, sections, activeDeckIds, allVisibleCards, editingCardId])
 
   const toggleSection = (sectionId) => {
     setExpandedSections(prev =>
@@ -643,6 +675,18 @@ export default function App() {
                   <Keyboard size={12} className="shrink-0 text-violet-400" />
                   <span>←/→ or ↑/↓ → Navigate cards</span>
                 </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-rose-400" />
+                  <span>⌘E → Enter edit mode</span>
+                </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-rose-400" />
+                  <span>Tab (editing) → Switch section</span>
+                </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-rose-400" />
+                  <span>⌘S → Save & exit</span>
+                </li>
               </ul>
             </div>
           </aside>
@@ -693,6 +737,12 @@ export default function App() {
                       return next;
                     });
                   }}
+                  isEditing={editingCardId === `${card.deckId}-${card.id}`}
+                  editingSection={editingSection}
+                  onExitEdit={() => {
+                    setEditingCardId(null);
+                    setEditingSection(null);
+                  }}
                 />
               ))}
             </div>
@@ -703,8 +753,18 @@ export default function App() {
   );
 }
 
-function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady, isSelected, isRevealed, onSelect, onToggleReveal }) {
+function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady, isSelected, isRevealed, onSelect, onToggleReveal, isEditing, editingSection, onExitEdit }) {
   const [isFocused, setIsFocused] = useState(null);
+
+  // Auto-focus the editing section when edit mode is enabled
+  // Clear focus when exiting edit mode
+  useEffect(() => {
+    if (isEditing && editingSection) {
+      setIsFocused(editingSection);
+    } else {
+      setIsFocused(null);
+    }
+  }, [isEditing, editingSection]);
 
   const handlePaste = (e, field) => {
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
@@ -739,13 +799,15 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady, isS
       data-card-id={`${card.deckId}-${card.id}`}
       onClick={(e) => { if (!e.target.isContentEditable) onSelect(); }}
       className={`group bg-white rounded-2xl border-2 transition-all duration-300 flex flex-col overflow-hidden shadow-sm min-h-[260px]
-        ${isSelected
+        ${isEditing
+          ? 'ring-2 ring-amber-400 border-amber-300 shadow-lg'
+          : isSelected
           ? 'ring-2 ring-indigo-400 border-indigo-300 shadow-lg'
           : 'border-slate-100 hover:border-indigo-200 hover:shadow-lg'
         }`}
     >
       {/* CARD HEADER */}
-      <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+      <div className={`px-4 py-3 border-b flex items-center justify-between ${isEditing ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
         <div className="flex items-center gap-2 overflow-hidden flex-1">
           <div className="bg-white border border-slate-200 rounded px-2 py-0.5 text-[10px] font-black text-indigo-600 flex items-center gap-1 shadow-sm shrink-0">
             <Hash size={12} />
@@ -760,13 +822,20 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady, isS
             {card.category}
           </span>
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
-          <button onClick={onAdd} className="p-1 hover:bg-indigo-50 text-indigo-600 rounded" title="Add new card">
-            <Plus size={14} />
-          </button>
-          <button onClick={onDelete} className="p-1 hover:bg-red-50 text-red-600 rounded" title="Delete card">
-            <Trash2 size={14} />
-          </button>
+        <div className="flex items-center gap-2 ml-2">
+          {isEditing && (
+            <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${editingSection === 'front' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+              Editing {editingSection === 'front' ? '❓ Q' : '✓ A'}
+            </span>
+          )}
+          <div className={`flex items-center gap-1 transition-opacity ${isEditing ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'}`}>
+            <button onClick={onAdd} className="p-1 hover:bg-indigo-50 text-indigo-600 rounded" title="Add new card">
+              <Plus size={14} />
+            </button>
+            <button onClick={onDelete} className="p-1 hover:bg-red-50 text-red-600 rounded" title="Delete card">
+              <Trash2 size={14} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -776,7 +845,11 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady, isS
           <div className="flex flex-col">
             <div className="flex justify-between items-center mb-1">
               <label className="text-[8px] font-black text-slate-300 uppercase tracking-widest block">Question</label>
-              {isFocused === 'front' && <span className="text-[8px] font-bold text-indigo-400 bg-indigo-50 px-1 rounded animate-pulse uppercase">Editing</span>}
+              {isFocused === 'front' && (
+                <span className="text-[8px] font-bold text-indigo-400 bg-indigo-50 px-1 rounded animate-pulse uppercase">
+                  {isEditing ? 'Tab to answer • ⌘S save' : 'Editing'}
+                </span>
+              )}
             </div>
             <SmartField
               value={card.front}
@@ -811,7 +884,11 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady, isS
                   {isRevealed ? <Eye size={14} /> : <EyeOff size={14} />}
                 </button>
               </div>
-              {isFocused === 'back' && <span className="text-[8px] font-bold text-emerald-400 bg-emerald-50 px-1 rounded animate-pulse uppercase">Editing</span>}
+              {isFocused === 'back' && (
+                <span className="text-[8px] font-bold text-emerald-400 bg-emerald-50 px-1 rounded animate-pulse uppercase">
+                  {isEditing ? 'Tab to question • ⌘S save' : 'Editing'}
+                </span>
+              )}
             </div>
 
             {isRevealed && (
