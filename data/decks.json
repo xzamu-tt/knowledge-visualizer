@@ -71,7 +71,7 @@
             "id": 1001,
             "displayId": "VAR-01",
             "front": "What are the **eight primitive types** in Java?",
-            "back": "The eight primitive types in Java are:\n1. **byte** - 8-bit signed integer\n2. **short** - 16-bit signed integer\n3. **int** - 32-bit signed integer\n4. **long** - 64-bit signed integer\n5. **float** - 32-bit floating-point\n6. **double** - 64-bit floating-point\n7. **boolean** - true or false\n8. **char** - 16-bit Unicode character\n\nThese store values directly in memory, unlike reference types which store object references.",
+            "back": "The eight primitive types in Java are:\n1. **byte** - 8-bit signed integer\n2. **short** - 16-bit signed integer\n3. **int** - 32-bit signed integer\n4. **long** - 64-bit signed integer\n5. **float** - 32-bit floating-point\n6. **double** - 64-bit floating-point\n7. **boolean** - true or false\n8. **char** - 16-bit Unicode character\n\nThese store values directly in memory, unlike reference types which store object references.  ",
             "category": "Primitive Types",
             "frontImage": null,
             "backImage": null

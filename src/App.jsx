@@ -450,6 +450,25 @@ export default function App() {
     }));
   };
 
+  // Auto-scroll to selected card when it changes
+  useEffect(() => {
+    if (!selectedCardId) return;
+
+    // Small delay to ensure DOM is updated
+    const timer = setTimeout(() => {
+      const cardElement = document.querySelector(`[data-card-id="${selectedCardId}"]`);
+      if (cardElement) {
+        cardElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center'
+        });
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [selectedCardId]);
+
   return (
     <div className="h-screen flex flex-col bg-slate-50 text-slate-900 overflow-hidden font-sans select-none">
       {/* HEADER */}
@@ -717,6 +736,7 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady, isS
 
   return (
     <div
+      data-card-id={`${card.deckId}-${card.id}`}
       onClick={(e) => { if (!e.target.isContentEditable) onSelect(); }}
       className={`group bg-white rounded-2xl border-2 transition-all duration-300 flex flex-col overflow-hidden shadow-sm min-h-[260px]
         ${isSelected
