@@ -281,6 +281,32 @@ export default function App() {
     setActiveDeckIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
+  const selectAllInSection = (sectionId) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+    const deckIds = section.decks.map(d => d.id);
+    setActiveDeckIds(prev => {
+      const newIds = new Set(prev);
+      deckIds.forEach(id => newIds.add(id));
+      return Array.from(newIds);
+    });
+  };
+
+  const deselectAllInSection = (sectionId) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+    const deckIds = new Set(section.decks.map(d => d.id));
+    setActiveDeckIds(prev => prev.filter(id => !deckIds.has(id)));
+  };
+
+  const isolateDeck = (deckId, sectionId) => {
+    setActiveDeckIds([deckId]);
+    // Auto-expand the section
+    setExpandedSections(prev =>
+      prev.includes(sectionId) ? prev : [...prev, sectionId]
+    );
+  };
+
   const updateCard = (sectionId, deckId, cardId, field, value) => {
     saveForUndo();
     setSections(prev => prev.map(section => {
@@ -396,20 +422,41 @@ export default function App() {
               {sections.map(section => {
                 const isExpanded = expandedSections.includes(section.id);
                 const totalCards = section.decks.reduce((acc, d) => acc + d.cards.length, 0);
+                const selectedDecksInSection = section.decks.filter(d => activeDeckIds.includes(d.id)).length;
+                const allSelected = selectedDecksInSection === section.decks.length;
+                const someSelected = selectedDecksInSection > 0 && !allSelected;
+
                 return (
                   <div key={section.id}>
-                    {/* Section header — clickable to toggle */}
+                    {/* Section header — clickable to toggle, with checkbox */}
                     <div
-                      onClick={() => toggleSection(section.id)}
-                      className="flex items-center gap-2 px-3 py-2 text-slate-500 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 text-slate-500 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors group"
                     >
                       <ChevronDown
                         size={14}
                         className={`transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`}
+                        onClick={() => toggleSection(section.id)}
                       />
                       <BookOpen size={16} />
-                      <span className="text-sm font-bold flex-1 truncate">{section.title}</span>
+                      <span className="text-sm font-bold flex-1 truncate" onClick={() => toggleSection(section.id)}>{section.title}</span>
                       <span className="text-[10px] text-slate-400">{totalCards}</span>
+                      {/* Section selection checkbox */}
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        ref={el => {
+                          if (el) el.indeterminate = someSelected;
+                        }}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            selectAllInSection(section.id);
+                          } else {
+                            deselectAllInSection(section.id);
+                          }
+                        }}
+                        className="w-4 h-4 rounded cursor-pointer"
+                        title={allSelected ? 'Deselect all decks in this book' : someSelected ? 'Some decks selected' : 'Select all decks in this book'}
+                      />
                     </div>
 
                     {/* Decks under this section */}
@@ -419,7 +466,12 @@ export default function App() {
                           <div
                             key={deck.id}
                             onClick={() => toggleDeck(deck.id)}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              isolateDeck(deck.id, section.id);
+                            }}
                             className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all ${activeDeckIds.includes(deck.id) ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-100' : 'text-slate-600 hover:bg-slate-50'}`}
+                            title="Right-click to isolate this deck"
                           >
                             <span className="text-sm font-medium truncate">{deck.title}</span>
                             <span className="text-[10px] bg-slate-200/50 px-1.5 rounded-full font-bold">{deck.cards.length}</span>
