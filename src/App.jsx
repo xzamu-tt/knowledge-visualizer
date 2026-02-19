@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import {
   Search, Plus, Download, BrainCircuit, Hash,
   ChevronDown, BookOpen, Layers, Library, Info, Image as ImageIcon, X,
-  Type, Sigma, Cloud, AlertCircle, Eye, EyeOff, Trash2
+  Type, Sigma, Cloud, AlertCircle, Eye, EyeOff, Trash2, ZoomIn, ZoomOut, Keyboard, FileDown, Check
 } from 'lucide-react';
 import { useDecksSync } from './hooks/useDecksSync';
 
@@ -87,6 +87,23 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [libsReady, setLibsReady] = useState(false);
   const [undoHistory, setUndoHistory] = useState(null);
+  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [revealedCardIds, setRevealedCardIds] = useState(new Set());
+  const [cardSize, setCardSize] = useState(3);
+  const [editingCardId, setEditingCardId] = useState(null);
+  const [editingSection, setEditingSection] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFilename, setExportFilename] = useState('');
+  const [selectedExportDeckIds, setSelectedExportDeckIds] = useState(new Set());
+  const [isExporting, setIsExporting] = useState(false);
+
+  const GRID_CLASSES = {
+    1: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+    2: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+    3: 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3',
+    4: 'grid-cols-1 xl:grid-cols-2',
+    5: 'grid-cols-1',
+  };
 
   // Update active deck IDs and expanded sections when sections load
   useEffect(() => {
@@ -259,17 +276,124 @@ export default function App() {
     }
   };
 
-  // Listen for Ctrl+Z
+  // Listen for all keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Handle Tab → switch sections while editing (works even in contentEditable)
+      if (e.key === 'Tab' && editingCardId !== null) {
+        e.preventDefault();
+        setEditingSection(prev => prev === 'front' ? 'back' : 'front');
+        return;
+      }
+
+      // Handle Cmd/Ctrl+S → save and exit edit mode (works even in contentEditable)
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        if (editingCardId !== null) {
+          e.preventDefault();
+          setEditingCardId(null);
+          setEditingSection(null);
+          return;
+        }
+      }
+
+      // Handle Escape → deselect (works even in contentEditable)
+      if (e.key === 'Escape') {
+        setSelectedCardId(null);
+        return;
+      }
+
+      // Guard: don't handle other shortcuts while in contentEditable/INPUT
+      if (e.target.isContentEditable || e.target.tagName === 'INPUT') return;
+
+      // Undo (Cmd/Ctrl+Z)
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
         undo();
       }
+
+      // Space → toggle reveal on selected card
+      if (e.key === ' ' && selectedCardId !== null) {
+        e.preventDefault();
+        setRevealedCardIds(prev => {
+          const next = new Set(prev);
+          next.has(selectedCardId) ? next.delete(selectedCardId) : next.add(selectedCardId);
+          return next;
+        });
+      }
+
+      // Cmd/Ctrl+N → add new card
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        if (selectedCardId !== null) {
+          const sel = allVisibleCards.find(c => `${c.deckId}-${c.id}` === selectedCardId);
+          if (sel) addCardToDeck(sel.sectionId, sel.deckId);
+        } else {
+          for (const section of sections) {
+            const deck = section.decks.find(d => activeDeckIds.includes(d.id));
+            if (deck) { addCardToDeck(section.id, deck.id); break; }
+          }
+        }
+      }
+
+      // Cmd/Ctrl+E → enter/start edit mode
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        if (selectedCardId === null) return;
+        // Start editing this card (front section first)
+        setEditingCardId(selectedCardId);
+        setEditingSection('front');
+      }
+
+      // + or = → bigger cards (fewer columns)
+      if ((e.key === '+' || e.key === '=') && !e.ctrlKey && !e.metaKey) {
+        setCardSize(p => Math.min(5, p + 1));
+      }
+
+      // - → smaller cards (more columns)
+      if (e.key === '-' && !e.ctrlKey && !e.metaKey) {
+        setCardSize(p => Math.max(1, p - 1));
+      }
+
+      // Arrow keys → navigate between cards
+      if (['ArrowLeft', 'ArrowUp'].includes(e.key)) {
+        e.preventDefault();
+        if (allVisibleCards.length === 0) return;
+        if (selectedCardId === null) {
+          setSelectedCardId(`${allVisibleCards[0].deckId}-${allVisibleCards[0].id}`);
+        } else {
+          const currentIndex = allVisibleCards.findIndex(c => `${c.deckId}-${c.id}` === selectedCardId);
+          if (currentIndex > 0) {
+            const prev = allVisibleCards[currentIndex - 1];
+            setSelectedCardId(`${prev.deckId}-${prev.id}`);
+          } else if (currentIndex === 0) {
+            // Wrap to end
+            const last = allVisibleCards[allVisibleCards.length - 1];
+            setSelectedCardId(`${last.deckId}-${last.id}`);
+          }
+        }
+      }
+
+      if (['ArrowRight', 'ArrowDown'].includes(e.key)) {
+        e.preventDefault();
+        if (allVisibleCards.length === 0) return;
+        if (selectedCardId === null) {
+          setSelectedCardId(`${allVisibleCards[0].deckId}-${allVisibleCards[0].id}`);
+        } else {
+          const currentIndex = allVisibleCards.findIndex(c => `${c.deckId}-${c.id}` === selectedCardId);
+          if (currentIndex < allVisibleCards.length - 1) {
+            const next = allVisibleCards[currentIndex + 1];
+            setSelectedCardId(`${next.deckId}-${next.id}`);
+          } else if (currentIndex === allVisibleCards.length - 1) {
+            // Wrap to start
+            setSelectedCardId(`${allVisibleCards[0].deckId}-${allVisibleCards[0].id}`);
+          }
+        }
+      }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undoHistory]);
+  }, [undoHistory, selectedCardId, sections, activeDeckIds, allVisibleCards, editingCardId])
 
   const toggleSection = (sectionId) => {
     setExpandedSections(prev =>
@@ -362,6 +486,25 @@ export default function App() {
     }));
   };
 
+  // Auto-scroll to selected card when it changes
+  useEffect(() => {
+    if (!selectedCardId) return;
+
+    // Small delay to ensure DOM is updated
+    const timer = setTimeout(() => {
+      const cardElement = document.querySelector(`[data-card-id="${selectedCardId}"]`);
+      if (cardElement) {
+        cardElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center'
+        });
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [selectedCardId]);
+
   return (
     <div className="h-screen flex flex-col bg-slate-50 text-slate-900 overflow-hidden font-sans select-none">
       {/* HEADER */}
@@ -405,11 +548,88 @@ export default function App() {
               Last sync: {lastSyncTime.toLocaleTimeString()}
             </div>
           )}
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={() => setCardSize(p => Math.max(1, p - 1))}
+              disabled={cardSize === 1}
+              className="p-2 text-slate-400 hover:text-indigo-600 disabled:opacity-30 transition-colors"
+              title="More cards (−)"
+            >
+              <ZoomOut size={16} />
+            </button>
+            <span className="text-[10px] font-bold text-slate-400 w-4 text-center tabular-nums">{cardSize}</span>
+            <button
+              onClick={() => setCardSize(p => Math.min(5, p + 1))}
+              disabled={cardSize === 5}
+              className="p-2 text-slate-400 hover:text-indigo-600 disabled:opacity-30 transition-colors"
+              title="Bigger cards (+)"
+            >
+              <ZoomIn size={16} />
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setSelectedExportDeckIds(new Set(activeDeckIds));
+              setExportFilename(`export-${new Date().toISOString().split('T')[0]}`);
+              setShowExportModal(true);
+            }}
+            className="p-2 text-slate-400 hover:text-amber-600 transition-colors"
+            title="Export to Anki"
+          >
+            <FileDown size={18} />
+          </button>
           <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
             <Download size={18} />
           </button>
         </div>
       </header>
+
+      {/* EXPORT MODAL */}
+      {showExportModal && (
+        <ExportModal
+          sections={sections}
+          activeDeckIds={activeDeckIds}
+          selectedExportDeckIds={selectedExportDeckIds}
+          setSelectedExportDeckIds={setSelectedExportDeckIds}
+          exportFilename={exportFilename}
+          setExportFilename={setExportFilename}
+          isExporting={isExporting}
+          onExport={async () => {
+            setIsExporting(true);
+            try {
+              const response = await fetch('/api/decks/export-anki', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  selectedDeckIds: Array.from(selectedExportDeckIds),
+                  filename: exportFilename,
+                  sections: sections
+                })
+              });
+
+              if (!response.ok) throw new Error('Export failed');
+
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `${exportFilename}.apkg`;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+
+              setShowExportModal(false);
+            } catch (error) {
+              console.error('Export error:', error);
+              alert('Export failed: ' + error.message);
+            } finally {
+              setIsExporting(false);
+            }
+          }}
+          onCancel={() => setShowExportModal(false)}
+        />
+      )}
 
       <div className="flex-1 flex overflow-hidden">
         {/* SIDEBAR */}
@@ -501,6 +721,34 @@ export default function App() {
                   <ImageIcon size={12} className="shrink-0 text-orange-400" />
                   <span>Paste images directly onto cards</span>
                 </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-violet-400" />
+                  <span>Space → Reveal selected card</span>
+                </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-violet-400" />
+                  <span>⌘N → New card in deck</span>
+                </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-violet-400" />
+                  <span>+/− → Resize card grid</span>
+                </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-violet-400" />
+                  <span>←/→ or ↑/↓ → Navigate cards</span>
+                </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-rose-400" />
+                  <span>⌘E → Enter edit mode</span>
+                </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-rose-400" />
+                  <span>Tab (editing) → Switch section</span>
+                </li>
+                <li className="flex gap-2 items-center">
+                  <Keyboard size={12} className="shrink-0 text-rose-400" />
+                  <span>⌘S → Save & exit</span>
+                </li>
               </ul>
             </div>
           </aside>
@@ -530,7 +778,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
+            <div className={`grid ${GRID_CLASSES[cardSize]} gap-6 pb-20`}>
               {allVisibleCards.map(card => (
                 <Flashcard
                   key={`${card.deckId}-${card.id}`}
@@ -540,6 +788,23 @@ export default function App() {
                   onAdd={() => addCardToDeck(card.sectionId, card.deckId)}
                   onDelete={() => deleteCard(card.sectionId, card.deckId, card.id)}
                   libsReady={libsReady}
+                  isSelected={selectedCardId === `${card.deckId}-${card.id}`}
+                  isRevealed={revealedCardIds.has(`${card.deckId}-${card.id}`)}
+                  onSelect={() => setSelectedCardId(`${card.deckId}-${card.id}`)}
+                  onToggleReveal={() => {
+                    const id = `${card.deckId}-${card.id}`;
+                    setRevealedCardIds(prev => {
+                      const next = new Set(prev);
+                      next.has(id) ? next.delete(id) : next.add(id);
+                      return next;
+                    });
+                  }}
+                  isEditing={editingCardId === `${card.deckId}-${card.id}`}
+                  editingSection={editingSection}
+                  onExitEdit={() => {
+                    setEditingCardId(null);
+                    setEditingSection(null);
+                  }}
                 />
               ))}
             </div>
@@ -550,9 +815,18 @@ export default function App() {
   );
 }
 
-function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady }) {
+function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady, isSelected, isRevealed, onSelect, onToggleReveal, isEditing, editingSection, onExitEdit }) {
   const [isFocused, setIsFocused] = useState(null);
-  const [isBackRevealed, setIsBackRevealed] = useState(false);
+
+  // Auto-focus the editing section when edit mode is enabled
+  // Clear focus when exiting edit mode
+  useEffect(() => {
+    if (isEditing && editingSection) {
+      setIsFocused(editingSection);
+    } else {
+      setIsFocused(null);
+    }
+  }, [isEditing, editingSection]);
 
   const handlePaste = (e, field) => {
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
@@ -583,9 +857,19 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady }) {
   );
 
   return (
-    <div className="group bg-white rounded-2xl border-2 transition-all duration-300 flex flex-col overflow-hidden shadow-sm border-slate-100 hover:border-indigo-200 hover:shadow-lg min-h-[260px]">
+    <div
+      data-card-id={`${card.deckId}-${card.id}`}
+      onClick={(e) => { if (!e.target.isContentEditable) onSelect(); }}
+      className={`group bg-white rounded-2xl border-2 transition-all duration-300 flex flex-col overflow-hidden shadow-sm min-h-[260px]
+        ${isEditing
+          ? 'ring-2 ring-amber-400 border-amber-300 shadow-lg'
+          : isSelected
+          ? 'ring-2 ring-indigo-400 border-indigo-300 shadow-lg'
+          : 'border-slate-100 hover:border-indigo-200 hover:shadow-lg'
+        }`}
+    >
       {/* CARD HEADER */}
-      <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+      <div className={`px-4 py-3 border-b flex items-center justify-between ${isEditing ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
         <div className="flex items-center gap-2 overflow-hidden flex-1">
           <div className="bg-white border border-slate-200 rounded px-2 py-0.5 text-[10px] font-black text-indigo-600 flex items-center gap-1 shadow-sm shrink-0">
             <Hash size={12} />
@@ -600,13 +884,20 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady }) {
             {card.category}
           </span>
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
-          <button onClick={onAdd} className="p-1 hover:bg-indigo-50 text-indigo-600 rounded" title="Add new card">
-            <Plus size={14} />
-          </button>
-          <button onClick={onDelete} className="p-1 hover:bg-red-50 text-red-600 rounded" title="Delete card">
-            <Trash2 size={14} />
-          </button>
+        <div className="flex items-center gap-2 ml-2">
+          {isEditing && (
+            <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${editingSection === 'front' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+              Editing {editingSection === 'front' ? '❓ Q' : '✓ A'}
+            </span>
+          )}
+          <div className={`flex items-center gap-1 transition-opacity ${isEditing ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'}`}>
+            <button onClick={onAdd} className="p-1 hover:bg-indigo-50 text-indigo-600 rounded" title="Add new card">
+              <Plus size={14} />
+            </button>
+            <button onClick={onDelete} className="p-1 hover:bg-red-50 text-red-600 rounded" title="Delete card">
+              <Trash2 size={14} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -616,7 +907,11 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady }) {
           <div className="flex flex-col">
             <div className="flex justify-between items-center mb-1">
               <label className="text-[8px] font-black text-slate-300 uppercase tracking-widest block">Question</label>
-              {isFocused === 'front' && <span className="text-[8px] font-bold text-indigo-400 bg-indigo-50 px-1 rounded animate-pulse uppercase">Editing</span>}
+              {isFocused === 'front' && (
+                <span className="text-[8px] font-bold text-indigo-400 bg-indigo-50 px-1 rounded animate-pulse uppercase">
+                  {isEditing ? 'Tab to answer • ⌘S save' : 'Editing'}
+                </span>
+              )}
             </div>
             <SmartField
               value={card.front}
@@ -644,17 +939,21 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady }) {
               <div className="flex items-center gap-2">
                 <label className="text-[8px] font-black text-slate-300 uppercase tracking-widest block">Answer</label>
                 <button
-                  onClick={() => setIsBackRevealed(!isBackRevealed)}
+                  onClick={() => onToggleReveal()}
                   className="p-0.5 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded transition-colors"
-                  title={isBackRevealed ? "Hide answer" : "Show answer"}
+                  title={isRevealed ? "Hide answer" : "Show answer"}
                 >
-                  {isBackRevealed ? <Eye size={14} /> : <EyeOff size={14} />}
+                  {isRevealed ? <Eye size={14} /> : <EyeOff size={14} />}
                 </button>
               </div>
-              {isFocused === 'back' && <span className="text-[8px] font-bold text-emerald-400 bg-emerald-50 px-1 rounded animate-pulse uppercase">Editing</span>}
+              {isFocused === 'back' && (
+                <span className="text-[8px] font-bold text-emerald-400 bg-emerald-50 px-1 rounded animate-pulse uppercase">
+                  {isEditing ? 'Tab to question • ⌘S save' : 'Editing'}
+                </span>
+              )}
             </div>
 
-            {isBackRevealed && (
+            {isRevealed && (
               <div className="animate-in fade-in duration-200">
                 <SmartField
                   value={card.back}
@@ -697,6 +996,136 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady }) {
             {card.backImage && <ImageDisplay src={card.backImage} field="back" />}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ExportModal({
+  sections,
+  activeDeckIds,
+  selectedExportDeckIds,
+  setSelectedExportDeckIds,
+  exportFilename,
+  setExportFilename,
+  isExporting,
+  onExport,
+  onCancel
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-slate-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FileDown size={24} className="text-amber-600" />
+              <h2 className="text-xl font-bold text-slate-800">Export to Anki</h2>
+            </div>
+            <button
+              onClick={onCancel}
+              className="p-2 hover:bg-white rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Filename Input */}
+          <div>
+            <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+              Filename
+            </label>
+            <input
+              type="text"
+              value={exportFilename}
+              onChange={(e) => setExportFilename(e.target.value)}
+              placeholder="export-2025-02-18"
+              className="w-full mt-2 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+            />
+            <p className="text-xs text-slate-500 mt-1">.apkg extension will be added automatically</p>
+          </div>
+
+          {/* Deck Selection */}
+          <div>
+            <label className="text-sm font-bold text-slate-700 uppercase tracking-wider block mb-3">
+              Select Decks to Export
+            </label>
+            <div className="border border-slate-200 rounded-lg p-4 max-h-96 overflow-y-auto space-y-2">
+              {sections.map(section => (
+                <div key={section.id}>
+                  <div className="font-semibold text-sm text-slate-700 mb-2">{section.title}</div>
+                  <div className="ml-4 space-y-2">
+                    {section.decks.map(deck => (
+                      <label key={deck.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedExportDeckIds.has(deck.id)}
+                          onChange={(e) => {
+                            const newIds = new Set(selectedExportDeckIds);
+                            if (e.target.checked) {
+                              newIds.add(deck.id);
+                            } else {
+                              newIds.delete(deck.id);
+                            }
+                            setSelectedExportDeckIds(newIds);
+                          }}
+                          className="w-4 h-4 rounded cursor-pointer"
+                        />
+                        <span className="text-sm text-slate-700">{deck.title}</span>
+                        <span className="text-xs text-slate-500">({deck.cards.length} cards)</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              Selected: {selectedExportDeckIds.size} deck(s)
+            </p>
+          </div>
+
+          {/* Info */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-900">
+            <p className="font-semibold mb-1">ℹ️ Anki Export Info</p>
+            <ul className="text-xs space-y-1 ml-4">
+              <li>• Decks will be organized hierarchically (Section::Deck)</li>
+              <li>• Images will be embedded in the .apkg file</li>
+              <li>• Card fields: Question (front) and Answer (back)</li>
+              <li>• Tags: Category and deck name</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-end gap-3">
+          <button
+            onClick={onCancel}
+            disabled={isExporting}
+            className="px-4 py-2 text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onExport}
+            disabled={isExporting || selectedExportDeckIds.size === 0 || !exportFilename}
+            className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium flex items-center gap-2"
+          >
+            {isExporting ? (
+              <>
+                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <Check size={18} />
+                Export to Anki
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
