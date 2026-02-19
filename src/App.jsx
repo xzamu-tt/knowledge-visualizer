@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import {
   Search, Plus, Download, BrainCircuit, Hash,
   ChevronDown, BookOpen, Layers, Library, Info, Image as ImageIcon, X,
-  Type, Sigma, Cloud, AlertCircle, Eye, EyeOff, Trash2, ZoomIn, ZoomOut, Keyboard
+  Type, Sigma, Cloud, AlertCircle, Eye, EyeOff, Trash2, ZoomIn, ZoomOut, Keyboard, FileDown, Check
 } from 'lucide-react';
 import { useDecksSync } from './hooks/useDecksSync';
 
@@ -92,6 +92,10 @@ export default function App() {
   const [cardSize, setCardSize] = useState(3);
   const [editingCardId, setEditingCardId] = useState(null);
   const [editingSection, setEditingSection] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFilename, setExportFilename] = useState('');
+  const [selectedExportDeckIds, setSelectedExportDeckIds] = useState(new Set());
+  const [isExporting, setIsExporting] = useState(false);
 
   const GRID_CLASSES = {
     1: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
@@ -563,11 +567,69 @@ export default function App() {
               <ZoomIn size={16} />
             </button>
           </div>
+          <button
+            onClick={() => {
+              setSelectedExportDeckIds(new Set(activeDeckIds));
+              setExportFilename(`export-${new Date().toISOString().split('T')[0]}`);
+              setShowExportModal(true);
+            }}
+            className="p-2 text-slate-400 hover:text-amber-600 transition-colors"
+            title="Export to Anki"
+          >
+            <FileDown size={18} />
+          </button>
           <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
             <Download size={18} />
           </button>
         </div>
       </header>
+
+      {/* EXPORT MODAL */}
+      {showExportModal && (
+        <ExportModal
+          sections={sections}
+          activeDeckIds={activeDeckIds}
+          selectedExportDeckIds={selectedExportDeckIds}
+          setSelectedExportDeckIds={setSelectedExportDeckIds}
+          exportFilename={exportFilename}
+          setExportFilename={setExportFilename}
+          isExporting={isExporting}
+          onExport={async () => {
+            setIsExporting(true);
+            try {
+              const response = await fetch('/api/decks/export-anki', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  selectedDeckIds: Array.from(selectedExportDeckIds),
+                  filename: exportFilename,
+                  sections: sections
+                })
+              });
+
+              if (!response.ok) throw new Error('Export failed');
+
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `${exportFilename}.apkg`;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+
+              setShowExportModal(false);
+            } catch (error) {
+              console.error('Export error:', error);
+              alert('Export failed: ' + error.message);
+            } finally {
+              setIsExporting(false);
+            }
+          }}
+          onCancel={() => setShowExportModal(false)}
+        />
+      )}
 
       <div className="flex-1 flex overflow-hidden">
         {/* SIDEBAR */}
@@ -934,6 +996,136 @@ function Flashcard({ card, visibility, onUpdate, onAdd, onDelete, libsReady, isS
             {card.backImage && <ImageDisplay src={card.backImage} field="back" />}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ExportModal({
+  sections,
+  activeDeckIds,
+  selectedExportDeckIds,
+  setSelectedExportDeckIds,
+  exportFilename,
+  setExportFilename,
+  isExporting,
+  onExport,
+  onCancel
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-slate-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FileDown size={24} className="text-amber-600" />
+              <h2 className="text-xl font-bold text-slate-800">Export to Anki</h2>
+            </div>
+            <button
+              onClick={onCancel}
+              className="p-2 hover:bg-white rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Filename Input */}
+          <div>
+            <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+              Filename
+            </label>
+            <input
+              type="text"
+              value={exportFilename}
+              onChange={(e) => setExportFilename(e.target.value)}
+              placeholder="export-2025-02-18"
+              className="w-full mt-2 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+            />
+            <p className="text-xs text-slate-500 mt-1">.apkg extension will be added automatically</p>
+          </div>
+
+          {/* Deck Selection */}
+          <div>
+            <label className="text-sm font-bold text-slate-700 uppercase tracking-wider block mb-3">
+              Select Decks to Export
+            </label>
+            <div className="border border-slate-200 rounded-lg p-4 max-h-96 overflow-y-auto space-y-2">
+              {sections.map(section => (
+                <div key={section.id}>
+                  <div className="font-semibold text-sm text-slate-700 mb-2">{section.title}</div>
+                  <div className="ml-4 space-y-2">
+                    {section.decks.map(deck => (
+                      <label key={deck.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedExportDeckIds.has(deck.id)}
+                          onChange={(e) => {
+                            const newIds = new Set(selectedExportDeckIds);
+                            if (e.target.checked) {
+                              newIds.add(deck.id);
+                            } else {
+                              newIds.delete(deck.id);
+                            }
+                            setSelectedExportDeckIds(newIds);
+                          }}
+                          className="w-4 h-4 rounded cursor-pointer"
+                        />
+                        <span className="text-sm text-slate-700">{deck.title}</span>
+                        <span className="text-xs text-slate-500">({deck.cards.length} cards)</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              Selected: {selectedExportDeckIds.size} deck(s)
+            </p>
+          </div>
+
+          {/* Info */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-900">
+            <p className="font-semibold mb-1">ℹ️ Anki Export Info</p>
+            <ul className="text-xs space-y-1 ml-4">
+              <li>• Decks will be organized hierarchically (Section::Deck)</li>
+              <li>• Images will be embedded in the .apkg file</li>
+              <li>• Card fields: Question (front) and Answer (back)</li>
+              <li>• Tags: Category and deck name</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-end gap-3">
+          <button
+            onClick={onCancel}
+            disabled={isExporting}
+            className="px-4 py-2 text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onExport}
+            disabled={isExporting || selectedExportDeckIds.size === 0 || !exportFilename}
+            className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium flex items-center gap-2"
+          >
+            {isExporting ? (
+              <>
+                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <Check size={18} />
+                Export to Anki
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
